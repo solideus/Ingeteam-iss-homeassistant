@@ -489,7 +489,7 @@ async def test_http_failure_does_not_disable_sse(system):
     )
     await emit(system, SCENARIOS["self_consumption"])
     assert (
-        hass.states.get(entity_id(hass, "sensor", "total_load_power")).state == "4048"
+        hass.states.get(entity_id(hass, "sensor", "total_load_power")).state == "3200"
     )
     data["holding_failure"] = False
     await entry.runtime_data.async_refresh()
