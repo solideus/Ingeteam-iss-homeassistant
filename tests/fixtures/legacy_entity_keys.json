@@ -1,0 +1,52 @@
+{
+  "sensor": [
+    "pv_total_power",
+    "battery_soc",
+    "battery_power",
+    "battery_voltage",
+    "battery_current",
+    "pv_1_power",
+    "pv_2_power",
+    "total_load_power",
+    "external_grid_power"
+  ],
+  "number": [
+    "bms_max_charge_current",
+    "bms_max_on_grid_discharge_current",
+    "max_grid_charge_power",
+    "max_surplus_grid_power",
+    "max_battery_grid_injection_power",
+    "soc_max",
+    "soc_recovery",
+    "soc_min",
+    "soc_descx",
+    "soc_recx",
+    "soc_grid_1",
+    "soc_grid_2",
+    "soc_discharge_1",
+    "soc_discharge_2"
+  ],
+  "switch": [
+    "bms_soc_calibration",
+    "prioritize_grid_export",
+    "peak_shaving"
+  ],
+  "select": [
+    "schedule_1_battery_use",
+    "schedule_2_battery_use",
+    "grid_charge_schedule_1_mode",
+    "grid_charge_schedule_2_mode",
+    "battery_discharge_schedule_1_mode",
+    "battery_discharge_schedule_2_mode"
+  ],
+  "time": [
+    "grid_charge_schedule_1_start",
+    "grid_charge_schedule_1_end",
+    "grid_charge_schedule_2_start",
+    "grid_charge_schedule_2_end",
+    "battery_discharge_schedule_1_start",
+    "battery_discharge_schedule_1_end",
+    "battery_discharge_schedule_2_start",
+    "battery_discharge_schedule_2_end"
+  ]
+}

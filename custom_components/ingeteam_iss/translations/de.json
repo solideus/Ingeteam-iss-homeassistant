@@ -1,0 +1,259 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mit Ingeteam ISS verbinden",
+        "description": "Gib die lokalen Zugangsdaten des Wechselrichters ein. Verwende einen eigenen Benutzer mit Installateurrechten. Referenz-Firmware: ABH1007AE.",
+        "data": {
+          "host": "IP-Adresse oder Hostname",
+          "username": "Benutzername",
+          "password": "Passwort",
+          "port": "HTTP-Port",
+          "device_id": "Wechselrichter-ID"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zum Wechselrichter fehlgeschlagen",
+      "invalid_auth": "Benutzername oder Passwort falsch",
+      "unknown": "Unerwarteter Fehler",
+      "invalid_connection_settings": "Die ID muss eine ganze Zahl von 1 bis 247 und der Port von 1 bis 65535 sein"
+    },
+    "abort": {
+      "already_configured": "Dieser Wechselrichter ist bereits konfiguriert"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ingeteam ISS Optionen",
+        "data": {
+          "scan_interval": "HTTP-Abfrageintervall (Sekunden)",
+          "sse_timeout": "Zeitlimit ohne SSE-Daten (Sekunden)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "number": {
+      "max_grid_charge_power": {
+        "name": "Maximale Ladeleistung aus Netz oder Generator"
+      },
+      "max_surplus_grid_power": {
+        "name": "Maximale Einspeiseleistung des PV-Überschusses"
+      },
+      "max_battery_grid_injection_power": {
+        "name": "Maximale Einspeiseleistung aus der Batterie"
+      },
+      "soc_max": {
+        "name": "Maximaler SOC"
+      },
+      "soc_recovery": {
+        "name": "Wiederherstellungs-SOC"
+      },
+      "soc_min": {
+        "name": "Minimaler SOC"
+      },
+      "soc_descx": {
+        "name": "SOC Descx"
+      },
+      "soc_recx": {
+        "name": "SOC Recx"
+      },
+      "soc_grid_1": {
+        "name": "SOC für Netzladung 1"
+      },
+      "soc_grid_2": {
+        "name": "SOC für Netzladung 2"
+      },
+      "soc_discharge_1": {
+        "name": "Minimaler SOC für geplante Entladung 1"
+      },
+      "soc_discharge_2": {
+        "name": "Minimaler SOC für geplante Entladung 2"
+      },
+      "bms_max_charge_current": {
+        "name": "Maximaler BMS-Ladestrom"
+      },
+      "bms_max_on_grid_discharge_current": {
+        "name": "Maximaler BMS-Entladestrom im Netzbetrieb"
+      }
+    },
+    "switch": {
+      "prioritize_grid_export": {
+        "name": "Netzeinspeisung vor Batterieladung priorisieren"
+      },
+      "peak_shaving": {
+        "name": "Lastspitzenbegrenzung"
+      },
+      "bms_soc_calibration": {
+        "name": "SOC-Kalibrierung bei Anforderung durch das BMS"
+      }
+    },
+    "sensor": {
+      "battery_soc": {
+        "name": "Batterie-SOC"
+      },
+      "battery_power": {
+        "name": "Batterieleistung"
+      },
+      "battery_voltage": {
+        "name": "Batteriespannung"
+      },
+      "battery_current": {
+        "name": "Batteriestrom"
+      },
+      "pv_1_power": {
+        "name": "PV-Leistung 1"
+      },
+      "pv_2_power": {
+        "name": "PV-Leistung 2"
+      },
+      "total_load_power": {
+        "name": "Gesamtlastleistung"
+      },
+      "external_grid_power": {
+        "name": "Netzleistung"
+      },
+      "pv_total_power": {
+        "name": "PV-Gesamtleistung"
+      },
+      "grid_import_power": {
+        "name": "Netzbezugsleistung"
+      },
+      "grid_export_power": {
+        "name": "Netzeinspeiseleistung"
+      },
+      "battery_charge_power": {
+        "name": "Batterieladeleistung"
+      },
+      "battery_discharge_power": {
+        "name": "Batterieentladeleistung"
+      },
+      "pv_energy": {
+        "name": "PV-Energie"
+      },
+      "load_energy": {
+        "name": "Haushaltsverbrauch"
+      },
+      "grid_import_energy": {
+        "name": "Netzbezugsenergie"
+      },
+      "grid_export_energy": {
+        "name": "Netzeinspeiseenergie"
+      },
+      "battery_charge_energy": {
+        "name": "Batterieladeenergie"
+      },
+      "battery_discharge_energy": {
+        "name": "Batterieentladeenergie"
+      },
+      "sse_last_event": {
+        "name": "Letztes gültiges SSE-Ereignis"
+      },
+      "sse_last_disconnect": {
+        "name": "Letzte SSE-Unterbrechung"
+      }
+    },
+    "select": {
+      "schedule_1_battery_use": {
+        "name": "Geplante Batterienutzung 1",
+        "state": {
+          "self_consumption": "Eigenverbrauch",
+          "grid_injection": "Netzeinspeisung"
+        }
+      },
+      "grid_charge_schedule_1_mode": {
+        "name": "Modus: Netzladung 1",
+        "state": {
+          "off": "Aus",
+          "whole_week": "Ganze Woche",
+          "weekdays": "Montag bis Freitag",
+          "weekend": "Samstag und Sonntag"
+        }
+      },
+      "battery_discharge_schedule_1_mode": {
+        "name": "Modus: Batterieentladung 1",
+        "state": {
+          "off": "Aus",
+          "whole_week": "Ganze Woche",
+          "weekdays": "Montag bis Freitag",
+          "weekend": "Samstag und Sonntag"
+        }
+      },
+      "schedule_2_battery_use": {
+        "name": "Geplante Batterienutzung 2",
+        "state": {
+          "self_consumption": "Eigenverbrauch",
+          "grid_injection": "Netzeinspeisung"
+        }
+      },
+      "grid_charge_schedule_2_mode": {
+        "name": "Modus: Netzladung 2",
+        "state": {
+          "off": "Aus",
+          "whole_week": "Ganze Woche",
+          "weekdays": "Montag bis Freitag",
+          "weekend": "Samstag und Sonntag"
+        }
+      },
+      "battery_discharge_schedule_2_mode": {
+        "name": "Modus: Batterieentladung 2",
+        "state": {
+          "off": "Aus",
+          "whole_week": "Ganze Woche",
+          "weekdays": "Montag bis Freitag",
+          "weekend": "Samstag und Sonntag"
+        }
+      }
+    },
+    "time": {
+      "grid_charge_schedule_1_start": {
+        "name": "Beginn: Netzladung 1"
+      },
+      "grid_charge_schedule_1_end": {
+        "name": "Ende: Netzladung 1"
+      },
+      "battery_discharge_schedule_1_start": {
+        "name": "Beginn: Batterieentladung 1"
+      },
+      "battery_discharge_schedule_1_end": {
+        "name": "Ende: Batterieentladung 1"
+      },
+      "grid_charge_schedule_2_start": {
+        "name": "Beginn: Netzladung 2"
+      },
+      "grid_charge_schedule_2_end": {
+        "name": "Ende: Netzladung 2"
+      },
+      "battery_discharge_schedule_2_start": {
+        "name": "Beginn: Batterieentladung 2"
+      },
+      "battery_discharge_schedule_2_end": {
+        "name": "Ende: Batterieentladung 2"
+      }
+    },
+    "binary_sensor": {
+      "sse_connected": {
+        "name": "SSE-Telemetrie verbunden"
+      }
+    }
+  },
+  "device": {
+    "battery": {
+      "name": "Ingeteam ISS · Batterieverwaltung"
+    },
+    "grid_charge": {
+      "name": "Ingeteam ISS · Geplante Netzladung"
+    },
+    "scheduled_discharge": {
+      "name": "Ingeteam ISS · Geplante Entladung"
+    },
+    "grid_export": {
+      "name": "Ingeteam ISS · Netz und Überschuss"
+    },
+    "energy": {
+      "name": "Ingeteam ISS · Energie"
+    }
+  }
+}

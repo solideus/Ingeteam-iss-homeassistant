@@ -1,0 +1,259 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Verbinden met Ingeteam ISS",
+        "description": "Voer de lokale inloggegevens van de omvormer in. Gebruik een aparte gebruiker met installateursrechten. Referentiefirmware: ABH1007AE.",
+        "data": {
+          "host": "IP-adres of hostnaam",
+          "username": "Gebruikersnaam",
+          "password": "Wachtwoord",
+          "port": "HTTP-poort",
+          "device_id": "Omvormer-ID"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken met de omvormer",
+      "invalid_auth": "Onjuiste gebruikersnaam of wachtwoord",
+      "unknown": "Onverwachte fout",
+      "invalid_connection_settings": "De ID moet een geheel getal van 1 tot 247 zijn en de poort van 1 tot 65535"
+    },
+    "abort": {
+      "already_configured": "Deze omvormer is al geconfigureerd"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ingeteam ISS-opties",
+        "data": {
+          "scan_interval": "HTTP-peilinterval (seconden)",
+          "sse_timeout": "Time-out zonder SSE-gegevens (seconden)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "number": {
+      "max_grid_charge_power": {
+        "name": "Maximaal laadvermogen uit net of generator"
+      },
+      "max_surplus_grid_power": {
+        "name": "Maximaal terugleververmogen van PV-overschot"
+      },
+      "max_battery_grid_injection_power": {
+        "name": "Maximaal terugleververmogen uit de batterij"
+      },
+      "soc_max": {
+        "name": "Maximale SOC"
+      },
+      "soc_recovery": {
+        "name": "Herstel-SOC"
+      },
+      "soc_min": {
+        "name": "Minimale SOC"
+      },
+      "soc_descx": {
+        "name": "SOC Descx"
+      },
+      "soc_recx": {
+        "name": "SOC Recx"
+      },
+      "soc_grid_1": {
+        "name": "SOC voor laden uit het net 1"
+      },
+      "soc_grid_2": {
+        "name": "SOC voor laden uit het net 2"
+      },
+      "soc_discharge_1": {
+        "name": "Minimale SOC voor gepland ontladen 1"
+      },
+      "soc_discharge_2": {
+        "name": "Minimale SOC voor gepland ontladen 2"
+      },
+      "bms_max_charge_current": {
+        "name": "Maximale BMS-laadstroom"
+      },
+      "bms_max_on_grid_discharge_current": {
+        "name": "Maximale BMS-ontlaadstroom bij netbedrijf"
+      }
+    },
+    "switch": {
+      "prioritize_grid_export": {
+        "name": "Teruglevering voorrang geven op het laden van de batterij"
+      },
+      "peak_shaving": {
+        "name": "Piekbeperking"
+      },
+      "bms_soc_calibration": {
+        "name": "SOC-kalibratie op verzoek van het BMS"
+      }
+    },
+    "sensor": {
+      "battery_soc": {
+        "name": "Batterij-SOC"
+      },
+      "battery_power": {
+        "name": "Batterijvermogen"
+      },
+      "battery_voltage": {
+        "name": "Batterijspanning"
+      },
+      "battery_current": {
+        "name": "Batterijstroom"
+      },
+      "pv_1_power": {
+        "name": "PV-vermogen 1"
+      },
+      "pv_2_power": {
+        "name": "PV-vermogen 2"
+      },
+      "total_load_power": {
+        "name": "Totaal verbruiksvermogen"
+      },
+      "external_grid_power": {
+        "name": "Netvermogen"
+      },
+      "pv_total_power": {
+        "name": "Totaal PV-vermogen"
+      },
+      "grid_import_power": {
+        "name": "Vermogen afgenomen van het net"
+      },
+      "grid_export_power": {
+        "name": "Vermogen teruggeleverd aan het net"
+      },
+      "battery_charge_power": {
+        "name": "Laadvermogen batterij"
+      },
+      "battery_discharge_power": {
+        "name": "Ontlaadvermogen batterij"
+      },
+      "pv_energy": {
+        "name": "Zonne-energie"
+      },
+      "load_energy": {
+        "name": "Energieverbruik woning"
+      },
+      "grid_import_energy": {
+        "name": "Energie afgenomen van het net"
+      },
+      "grid_export_energy": {
+        "name": "Energie teruggeleverd aan het net"
+      },
+      "battery_charge_energy": {
+        "name": "Laadenergie batterij"
+      },
+      "battery_discharge_energy": {
+        "name": "Ontlaadenergie batterij"
+      },
+      "sse_last_event": {
+        "name": "Laatste geldige SSE-gebeurtenis"
+      },
+      "sse_last_disconnect": {
+        "name": "Laatste SSE-onderbreking"
+      }
+    },
+    "select": {
+      "schedule_1_battery_use": {
+        "name": "Gepland batterijgebruik 1",
+        "state": {
+          "self_consumption": "Eigen verbruik",
+          "grid_injection": "Teruglevering"
+        }
+      },
+      "grid_charge_schedule_1_mode": {
+        "name": "Modus: Laden uit het net 1",
+        "state": {
+          "off": "Uit",
+          "whole_week": "Hele week",
+          "weekdays": "Maandag tot vrijdag",
+          "weekend": "Zaterdag en zondag"
+        }
+      },
+      "battery_discharge_schedule_1_mode": {
+        "name": "Modus: Batterij ontladen 1",
+        "state": {
+          "off": "Uit",
+          "whole_week": "Hele week",
+          "weekdays": "Maandag tot vrijdag",
+          "weekend": "Zaterdag en zondag"
+        }
+      },
+      "schedule_2_battery_use": {
+        "name": "Gepland batterijgebruik 2",
+        "state": {
+          "self_consumption": "Eigen verbruik",
+          "grid_injection": "Teruglevering"
+        }
+      },
+      "grid_charge_schedule_2_mode": {
+        "name": "Modus: Laden uit het net 2",
+        "state": {
+          "off": "Uit",
+          "whole_week": "Hele week",
+          "weekdays": "Maandag tot vrijdag",
+          "weekend": "Zaterdag en zondag"
+        }
+      },
+      "battery_discharge_schedule_2_mode": {
+        "name": "Modus: Batterij ontladen 2",
+        "state": {
+          "off": "Uit",
+          "whole_week": "Hele week",
+          "weekdays": "Maandag tot vrijdag",
+          "weekend": "Zaterdag en zondag"
+        }
+      }
+    },
+    "time": {
+      "grid_charge_schedule_1_start": {
+        "name": "Begin: Laden uit het net 1"
+      },
+      "grid_charge_schedule_1_end": {
+        "name": "Einde: Laden uit het net 1"
+      },
+      "battery_discharge_schedule_1_start": {
+        "name": "Begin: Batterij ontladen 1"
+      },
+      "battery_discharge_schedule_1_end": {
+        "name": "Einde: Batterij ontladen 1"
+      },
+      "grid_charge_schedule_2_start": {
+        "name": "Begin: Laden uit het net 2"
+      },
+      "grid_charge_schedule_2_end": {
+        "name": "Einde: Laden uit het net 2"
+      },
+      "battery_discharge_schedule_2_start": {
+        "name": "Begin: Batterij ontladen 2"
+      },
+      "battery_discharge_schedule_2_end": {
+        "name": "Einde: Batterij ontladen 2"
+      }
+    },
+    "binary_sensor": {
+      "sse_connected": {
+        "name": "SSE-telemetrie verbonden"
+      }
+    }
+  },
+  "device": {
+    "battery": {
+      "name": "Ingeteam ISS · Batterijbeheer"
+    },
+    "grid_charge": {
+      "name": "Ingeteam ISS · Gepland laden uit het net"
+    },
+    "scheduled_discharge": {
+      "name": "Ingeteam ISS · Gepland ontladen"
+    },
+    "grid_export": {
+      "name": "Ingeteam ISS · Net en overschot"
+    },
+    "energy": {
+      "name": "Ingeteam ISS · Energie"
+    }
+  }
+}
