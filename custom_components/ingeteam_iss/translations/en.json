@@ -1,0 +1,259 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Ingeteam ISS",
+        "description": "Enter the local inverter credentials. Use a dedicated user with Installer permissions. Reference firmware: ABH1007AE.",
+        "data": {
+          "host": "IP address or host name",
+          "username": "Username",
+          "password": "Password",
+          "port": "HTTP port",
+          "device_id": "Inverter ID"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the inverter",
+      "invalid_auth": "Invalid username or password",
+      "unknown": "Unexpected error",
+      "invalid_connection_settings": "The ID must be an integer from 1 to 247 and the port from 1 to 65535"
+    },
+    "abort": {
+      "already_configured": "This inverter is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ingeteam ISS options",
+        "data": {
+          "scan_interval": "HTTP polling interval (seconds)",
+          "sse_timeout": "SSE data timeout (seconds)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "number": {
+      "max_grid_charge_power": {
+        "name": "Maximum grid or generator charge power"
+      },
+      "max_surplus_grid_power": {
+        "name": "Maximum PV surplus export power"
+      },
+      "max_battery_grid_injection_power": {
+        "name": "Maximum battery export power"
+      },
+      "soc_max": {
+        "name": "Maximum SOC"
+      },
+      "soc_recovery": {
+        "name": "Recovery SOC"
+      },
+      "soc_min": {
+        "name": "Minimum SOC"
+      },
+      "soc_descx": {
+        "name": "SOC Descx"
+      },
+      "soc_recx": {
+        "name": "SOC Recx"
+      },
+      "soc_grid_1": {
+        "name": "Grid charge SOC 1"
+      },
+      "soc_grid_2": {
+        "name": "Grid charge SOC 2"
+      },
+      "soc_discharge_1": {
+        "name": "Scheduled discharge minimum SOC 1"
+      },
+      "soc_discharge_2": {
+        "name": "Scheduled discharge minimum SOC 2"
+      },
+      "bms_max_charge_current": {
+        "name": "BMS maximum charge current"
+      },
+      "bms_max_on_grid_discharge_current": {
+        "name": "BMS maximum on-grid discharge current"
+      }
+    },
+    "switch": {
+      "prioritize_grid_export": {
+        "name": "Prioritize grid export before battery charging"
+      },
+      "peak_shaving": {
+        "name": "Peak shaving"
+      },
+      "bms_soc_calibration": {
+        "name": "SOC calibration when requested by the BMS"
+      }
+    },
+    "select": {
+      "schedule_1_battery_use": {
+        "name": "Scheduled battery use 1",
+        "state": {
+          "self_consumption": "Self consumption",
+          "grid_injection": "Grid injection"
+        }
+      },
+      "schedule_2_battery_use": {
+        "name": "Scheduled battery use 2",
+        "state": {
+          "self_consumption": "Self consumption",
+          "grid_injection": "Grid injection"
+        }
+      },
+      "grid_charge_schedule_1_mode": {
+        "name": "Grid charge schedule 1 mode",
+        "state": {
+          "off": "Off",
+          "whole_week": "Whole week",
+          "weekdays": "Monday to Friday",
+          "weekend": "Saturday and Sunday"
+        }
+      },
+      "grid_charge_schedule_2_mode": {
+        "name": "Grid charge schedule 2 mode",
+        "state": {
+          "off": "Off",
+          "whole_week": "Whole week",
+          "weekdays": "Monday to Friday",
+          "weekend": "Saturday and Sunday"
+        }
+      },
+      "battery_discharge_schedule_1_mode": {
+        "name": "Battery discharge schedule 1 mode",
+        "state": {
+          "off": "Off",
+          "whole_week": "Whole week",
+          "weekdays": "Monday to Friday",
+          "weekend": "Saturday and Sunday"
+        }
+      },
+      "battery_discharge_schedule_2_mode": {
+        "name": "Battery discharge schedule 2 mode",
+        "state": {
+          "off": "Off",
+          "whole_week": "Whole week",
+          "weekdays": "Monday to Friday",
+          "weekend": "Saturday and Sunday"
+        }
+      }
+    },
+    "time": {
+      "grid_charge_schedule_1_start": {
+        "name": "Grid charge schedule 1 start"
+      },
+      "grid_charge_schedule_1_end": {
+        "name": "Grid charge schedule 1 end"
+      },
+      "grid_charge_schedule_2_start": {
+        "name": "Grid charge schedule 2 start"
+      },
+      "grid_charge_schedule_2_end": {
+        "name": "Grid charge schedule 2 end"
+      },
+      "battery_discharge_schedule_1_start": {
+        "name": "Battery discharge schedule 1 start"
+      },
+      "battery_discharge_schedule_1_end": {
+        "name": "Battery discharge schedule 1 end"
+      },
+      "battery_discharge_schedule_2_start": {
+        "name": "Battery discharge schedule 2 start"
+      },
+      "battery_discharge_schedule_2_end": {
+        "name": "Battery discharge schedule 2 end"
+      }
+    },
+    "sensor": {
+      "battery_soc": {
+        "name": "Battery SOC"
+      },
+      "battery_power": {
+        "name": "Battery power"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "battery_current": {
+        "name": "Battery current"
+      },
+      "pv_1_power": {
+        "name": "PV 1 power"
+      },
+      "pv_2_power": {
+        "name": "PV 2 power"
+      },
+      "total_load_power": {
+        "name": "Total load power"
+      },
+      "external_grid_power": {
+        "name": "Grid power"
+      },
+      "pv_total_power": {
+        "name": "Total PV power"
+      },
+      "grid_import_power": {
+        "name": "Grid import power"
+      },
+      "grid_export_power": {
+        "name": "Grid export power"
+      },
+      "battery_charge_power": {
+        "name": "Battery charging power"
+      },
+      "battery_discharge_power": {
+        "name": "Battery discharging power"
+      },
+      "pv_energy": {
+        "name": "PV energy"
+      },
+      "load_energy": {
+        "name": "Household consumption energy"
+      },
+      "grid_import_energy": {
+        "name": "Grid import energy"
+      },
+      "grid_export_energy": {
+        "name": "Grid export energy"
+      },
+      "battery_charge_energy": {
+        "name": "Battery charge energy"
+      },
+      "battery_discharge_energy": {
+        "name": "Battery discharge energy"
+      },
+      "sse_last_event": {
+        "name": "Last valid SSE event"
+      },
+      "sse_last_disconnect": {
+        "name": "Last SSE interruption"
+      }
+    },
+    "binary_sensor": {
+      "sse_connected": {
+        "name": "SSE telemetry connected"
+      }
+    }
+  },
+  "device": {
+    "battery": {
+      "name": "Ingeteam ISS · Battery management"
+    },
+    "grid_charge": {
+      "name": "Ingeteam ISS · Scheduled grid charging"
+    },
+    "scheduled_discharge": {
+      "name": "Ingeteam ISS · Scheduled discharging"
+    },
+    "grid_export": {
+      "name": "Ingeteam ISS · Grid and surplus"
+    },
+    "energy": {
+      "name": "Ingeteam ISS · Energy"
+    }
+  }
+}

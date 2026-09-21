@@ -1,0 +1,259 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Conectar con el Ingeteam ISS",
+        "description": "Introduce el acceso local del inversor. Utiliza un usuario específico con permisos de Instalador. Firmware de referencia: ABH1007AE.",
+        "data": {
+          "host": "Dirección IP o nombre",
+          "username": "Usuario",
+          "password": "Contraseña",
+          "port": "Puerto HTTP",
+          "device_id": "ID del inversor"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "No se pudo conectar con el inversor",
+      "invalid_auth": "Usuario o contraseña incorrectos",
+      "unknown": "Error inesperado",
+      "invalid_connection_settings": "El ID debe ser un entero entre 1 y 247 y el puerto entre 1 y 65535"
+    },
+    "abort": {
+      "already_configured": "Este inversor ya está configurado"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opciones de Ingeteam ISS",
+        "data": {
+          "scan_interval": "Intervalo de sondeo HTTP (segundos)",
+          "sse_timeout": "Tiempo sin datos SSE (segundos)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "number": {
+      "max_grid_charge_power": {
+        "name": "Potencia máxima de carga desde red o generador"
+      },
+      "max_surplus_grid_power": {
+        "name": "Potencia máxima de excedente FV a red"
+      },
+      "max_battery_grid_injection_power": {
+        "name": "Potencia máxima de batería a red"
+      },
+      "soc_max": {
+        "name": "SOC máximo"
+      },
+      "soc_recovery": {
+        "name": "SOC de recuperación"
+      },
+      "soc_min": {
+        "name": "SOC mínimo"
+      },
+      "soc_descx": {
+        "name": "SOC Descx"
+      },
+      "soc_recx": {
+        "name": "SOC Recx"
+      },
+      "soc_grid_1": {
+        "name": "SOC de carga desde red 1"
+      },
+      "soc_grid_2": {
+        "name": "SOC de carga desde red 2"
+      },
+      "soc_discharge_1": {
+        "name": "SOC mínimo de descarga programada 1"
+      },
+      "soc_discharge_2": {
+        "name": "SOC mínimo de descarga programada 2"
+      },
+      "bms_max_charge_current": {
+        "name": "Corriente máxima de carga BMS"
+      },
+      "bms_max_on_grid_discharge_current": {
+        "name": "Corriente máxima de descarga BMS en On-Grid"
+      }
+    },
+    "switch": {
+      "prioritize_grid_export": {
+        "name": "Priorizar inyección a red antes que batería"
+      },
+      "peak_shaving": {
+        "name": "Peak shaving"
+      },
+      "bms_soc_calibration": {
+        "name": "Calibración del SOC cuando lo necesita el BMS"
+      }
+    },
+    "select": {
+      "schedule_1_battery_use": {
+        "name": "Uso de batería programado 1",
+        "state": {
+          "self_consumption": "Autoconsumo",
+          "grid_injection": "Inyección a red"
+        }
+      },
+      "schedule_2_battery_use": {
+        "name": "Uso de batería programado 2",
+        "state": {
+          "self_consumption": "Autoconsumo",
+          "grid_injection": "Inyección a red"
+        }
+      },
+      "grid_charge_schedule_1_mode": {
+        "name": "Modo de carga desde red 1",
+        "state": {
+          "off": "Desactivado",
+          "whole_week": "Toda la semana",
+          "weekdays": "Lunes a viernes",
+          "weekend": "Sábado y domingo"
+        }
+      },
+      "grid_charge_schedule_2_mode": {
+        "name": "Modo de carga desde red 2",
+        "state": {
+          "off": "Desactivado",
+          "whole_week": "Toda la semana",
+          "weekdays": "Lunes a viernes",
+          "weekend": "Sábado y domingo"
+        }
+      },
+      "battery_discharge_schedule_1_mode": {
+        "name": "Modo de descarga de batería 1",
+        "state": {
+          "off": "Desactivado",
+          "whole_week": "Toda la semana",
+          "weekdays": "Lunes a viernes",
+          "weekend": "Sábado y domingo"
+        }
+      },
+      "battery_discharge_schedule_2_mode": {
+        "name": "Modo de descarga de batería 2",
+        "state": {
+          "off": "Desactivado",
+          "whole_week": "Toda la semana",
+          "weekdays": "Lunes a viernes",
+          "weekend": "Sábado y domingo"
+        }
+      }
+    },
+    "time": {
+      "grid_charge_schedule_1_start": {
+        "name": "Inicio de carga desde red 1"
+      },
+      "grid_charge_schedule_1_end": {
+        "name": "Fin de carga desde red 1"
+      },
+      "grid_charge_schedule_2_start": {
+        "name": "Inicio de carga desde red 2"
+      },
+      "grid_charge_schedule_2_end": {
+        "name": "Fin de carga desde red 2"
+      },
+      "battery_discharge_schedule_1_start": {
+        "name": "Inicio de descarga de batería 1"
+      },
+      "battery_discharge_schedule_1_end": {
+        "name": "Fin de descarga de batería 1"
+      },
+      "battery_discharge_schedule_2_start": {
+        "name": "Inicio de descarga de batería 2"
+      },
+      "battery_discharge_schedule_2_end": {
+        "name": "Fin de descarga de batería 2"
+      }
+    },
+    "sensor": {
+      "battery_soc": {
+        "name": "SOC de batería"
+      },
+      "battery_power": {
+        "name": "Potencia de batería"
+      },
+      "battery_voltage": {
+        "name": "Tensión de batería"
+      },
+      "battery_current": {
+        "name": "Corriente de batería"
+      },
+      "pv_1_power": {
+        "name": "Potencia FV 1"
+      },
+      "pv_2_power": {
+        "name": "Potencia FV 2"
+      },
+      "total_load_power": {
+        "name": "Potencia de cargas totales"
+      },
+      "external_grid_power": {
+        "name": "Potencia de red"
+      },
+      "pv_total_power": {
+        "name": "Potencia FV total"
+      },
+      "grid_import_power": {
+        "name": "Potencia importada de red"
+      },
+      "grid_export_power": {
+        "name": "Potencia exportada a red"
+      },
+      "battery_charge_power": {
+        "name": "Potencia de carga de batería"
+      },
+      "battery_discharge_power": {
+        "name": "Potencia de descarga de batería"
+      },
+      "pv_energy": {
+        "name": "Energía fotovoltaica"
+      },
+      "load_energy": {
+        "name": "Energía consumida por la vivienda"
+      },
+      "grid_import_energy": {
+        "name": "Energía importada de red"
+      },
+      "grid_export_energy": {
+        "name": "Energía exportada a red"
+      },
+      "battery_charge_energy": {
+        "name": "Energía de carga de batería"
+      },
+      "battery_discharge_energy": {
+        "name": "Energía de descarga de batería"
+      },
+      "sse_last_event": {
+        "name": "Último evento SSE válido"
+      },
+      "sse_last_disconnect": {
+        "name": "Última interrupción SSE"
+      }
+    },
+    "binary_sensor": {
+      "sse_connected": {
+        "name": "Telemetría SSE conectada"
+      }
+    }
+  },
+  "device": {
+    "battery": {
+      "name": "Ingeteam ISS · Gestión de batería"
+    },
+    "grid_charge": {
+      "name": "Ingeteam ISS · Carga programada desde red"
+    },
+    "scheduled_discharge": {
+      "name": "Ingeteam ISS · Descarga programada"
+    },
+    "grid_export": {
+      "name": "Ingeteam ISS · Red y excedentes"
+    },
+    "energy": {
+      "name": "Ingeteam ISS · Energía"
+    }
+  }
+}

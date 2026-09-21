@@ -1,0 +1,17 @@
+{
+  "grid_charge": {
+    "Phases": [{"Phase": 4, "W": 3000, "PacCharge": 4500, "PacDischarge": 0, "pv": 4000, "cons": 2500, "soc": 60, "vbat": 200, "StatusBat": 2}]
+  },
+  "battery_export": {
+    "Phases": [{"Phase": 4, "W": -2000, "PacCharge": 0, "PacDischarge": 500, "pv": 3500, "cons": 2000, "soc": 70, "vbat": 200, "StatusBat": 1}]
+  },
+  "self_consumption": {
+    "Phases": [{"Phase": 4, "W": 50, "PacCharge": 0, "PacDischarge": 2050, "pv": 1200, "cons": 3200, "soc": 65, "vbat": 200, "StatusBat": 1}]
+  },
+  "battery_disconnected": {
+    "Phases": [{"Phase": 4, "W": 800, "PacCharge": 0, "PacDischarge": 0, "pv": 0, "cons": 800, "soc": 0, "vbat": 0, "StatusBat": 7}]
+  },
+  "pv_charge": {
+    "Phases": [{"Phase": 4, "W": 0, "PacCharge": 3000, "PacDischarge": 0, "pv": 5000, "cons": 2000, "soc": 55, "vbat": 200, "StatusBat": 2}]
+  }
+}
