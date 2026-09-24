@@ -1,5 +1,27 @@
 # Registro de cambios
 
+## 0.5.0
+
+- Frecuencia de publicación: Tiempo real — SSE (predeterminada), 5, 10 o 30 s.
+  La recepción, el watchdog y la integración energética procesan cada muestra.
+- Reconfiguración de host, puerto, usuario, contraseña, ID y frecuencia;
+  reautenticación, validación previa y migración conservando entidades e históricos.
+- Consumo diario y mensual, con periodos de la zona horaria de Home Assistant.
+- Balance neto por hora: importación/exportación netas acumulativas, balance de
+  la hora en curso y medidores netos diarios/mensuales. Implementación propia
+  basada en el comportamiento documentado de ha-balance-neto.
+- Persistencia del saldo pendiente; separación de intervalos al cruzar horas;
+  protección frente a reinicios, huecos, saltos de reloj y cambios de horario.
+- Estados de red y batería, FV activa, conexión a red, alarma y reducción de potencia.
+- Alarmas interpretadas mediante el mapa del equipo, categoría y hexadecimal
+  conservados; evento `ingeteam_iss_alarm` al activar/desactivar cada código.
+  Los bits sin descripción BMS permanecen explícitamente no documentados.
+- Diagnóstico SSE ampliado y descarga de diagnóstico sin credenciales ni identidad.
+- Detección de capacidades mediante el mapa; filtro de controles y protección de
+  escrituras. ABH1007AE es referencia comprobada, sin bloquear otros firmwares.
+- Conservación de los 53 identificadores de la 0.4.0; hasta 70 entidades en los
+  mismos seis grupos, según capacidades del equipo.
+
 ## 0.4.0
 
 - Telemetría local SSE mediante un coordinador independiente de los controles HTTP.

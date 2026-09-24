@@ -62,6 +62,42 @@ class IngeteamApi:
         self.port = bounded_integer(port, 1, 65535)
         self.device_id = bounded_integer(device_id, 1, 247)
         self._timeout = ClientTimeout(total=10)
+        self.capabilities: dict[str, Any] = {}
+
+    async def async_load_capabilities(self) -> None:
+        """Use the device's own map; a missing optional map is not a lockout."""
+        try:
+            self.capabilities = await self._request_json(
+                "GET", f"/inverter/map/{self.device_id}"
+            )
+        except IngeteamAuthError:
+            raise
+        except IngeteamApiError:
+            self.capabilities = {}
+
+    def supports(self, section: str, address: int, bit: int = 0) -> bool:
+        fields = self.capabilities.get(section)
+        if not isinstance(fields, list):
+            return True
+        return any(
+            isinstance(f, dict) and f.get("add") == address and f.get("start", 0) == bit
+            for f in fields
+        )
+
+    def ranges(self, section: str, requested) -> list[dict]:
+        if not isinstance(self.capabilities.get(section), list):
+            return list(requested)
+        allowed = {
+            f["add"]
+            for f in self.capabilities[section]
+            if isinstance(f, dict) and type(f.get("add")) is int
+        }
+        return [
+            {"address": a, "length": 1}
+            for r in requested
+            for a in range(r["address"], r["address"] + r["length"])
+            if a in allowed
+        ]
 
     @property
     def base_url(self) -> str:
@@ -140,7 +176,7 @@ class IngeteamApi:
         response = await self._request_json(
             "POST",
             f"/inverter/holding/read/{self.device_id}",
-            list(HOLDING_RANGES),
+            self.ranges("holding", HOLDING_RANGES),
         )
         return self._flatten_register_response(response)
 
@@ -149,7 +185,7 @@ class IngeteamApi:
         response = await self._request_json(
             "POST",
             f"/inverter/online/read/{self.device_id}",
-            list(ONLINE_RANGES),
+            self.ranges("online", ONLINE_RANGES),
         )
         return self._flatten_register_response(response)
 
@@ -174,6 +210,8 @@ class IngeteamApi:
             ],
             "metadata": {"user": self.username, "host": "home-assistant"},
         }
+        if any(not self.supports("holding", a, b) for a, b, _ in values):
+            raise IngeteamApiError("Unsupported holding register on this device")
         response = await self._request_json(
             "POST", f"/inverter/holding/write/{self.device_id}", payload
         )

@@ -9,7 +9,41 @@
           "username": "Gebruikersnaam",
           "password": "Wachtwoord",
           "port": "HTTP-poort",
-          "device_id": "Omvormer-ID"
+          "device_id": "Omvormer-ID",
+          "publish_interval": "Updatefrequentie"
+        },
+        "data_description": {
+          "publish_interval": "SSE werkt bij zodra gegevens binnenkomen. Andere intervallen beperken alleen publicatie, niet ontvangst of energieberekening."
+        }
+      },
+      "reconfigure": {
+        "title": "Ingeteam ISS opnieuw configureren",
+        "description": "De verbinding wordt vóór opslaan gecontroleerd. Laat het wachtwoord leeg om het huidige te behouden.",
+        "data": {
+          "host": "IP-adres of hostnaam",
+          "username": "Gebruikersnaam",
+          "password": "Wachtwoord",
+          "port": "HTTP-poort",
+          "device_id": "Omvormer-ID",
+          "publish_interval": "Updatefrequentie"
+        },
+        "data_description": {
+          "publish_interval": "SSE werkt bij zodra gegevens binnenkomen. Andere intervallen beperken alleen publicatie, niet ontvangst of energieberekening."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Inloggegevens vernieuwen",
+        "description": "De verbinding wordt vóór opslaan gecontroleerd. Laat het wachtwoord leeg om het huidige te behouden.",
+        "data": {
+          "host": "IP-adres of hostnaam",
+          "username": "Gebruikersnaam",
+          "password": "Wachtwoord",
+          "port": "HTTP-poort",
+          "device_id": "Omvormer-ID",
+          "publish_interval": "Updatefrequentie"
+        },
+        "data_description": {
+          "publish_interval": "SSE werkt bij zodra gegevens binnenkomen. Andere intervallen beperken alleen publicatie, niet ontvangst of energieberekening."
         }
       }
     },
@@ -17,10 +51,14 @@
       "cannot_connect": "Kan geen verbinding maken met de omvormer",
       "invalid_auth": "Onjuiste gebruikersnaam of wachtwoord",
       "unknown": "Onverwachte fout",
-      "invalid_connection_settings": "De ID moet een geheel getal van 1 tot 247 zijn en de poort van 1 tot 65535"
+      "invalid_connection_settings": "De ID moet een geheel getal van 1 tot 247 zijn en de poort van 1 tot 65535",
+      "unsupported_device": "Geen ondersteunde registers gevonden voor dit omvormer-ID.",
+      "different_device": "Het serienummer hoort bij een ander apparaat. De geschiedenis wordt niet samengevoegd."
     },
     "abort": {
-      "already_configured": "Deze omvormer is al geconfigureerd"
+      "already_configured": "Deze omvormer is al geconfigureerd",
+      "reconfigure_successful": "Configuratie bijgewerkt.",
+      "reauth_successful": "Inloggegevens bijgewerkt."
     }
   },
   "options": {
@@ -29,7 +67,11 @@
         "title": "Ingeteam ISS-opties",
         "data": {
           "scan_interval": "HTTP-peilinterval (seconden)",
-          "sse_timeout": "Time-out zonder SSE-gegevens (seconden)"
+          "sse_timeout": "Time-out zonder SSE-gegevens (seconden)",
+          "publish_interval": "Updatefrequentie"
+        },
+        "data_description": {
+          "publish_interval": "SSE werkt bij zodra gegevens binnenkomen. Andere intervallen beperken alleen publicatie, niet ontvangst of energieberekening."
         }
       }
     }
@@ -153,6 +195,60 @@
       },
       "sse_last_disconnect": {
         "name": "Laatste SSE-onderbreking"
+      },
+      "load_energy_daily": {
+        "name": "Dagelijks verbruik"
+      },
+      "load_energy_monthly": {
+        "name": "Maandelijks verbruik"
+      },
+      "net_import_energy": {
+        "name": "Netto geïmporteerde energie"
+      },
+      "net_export_energy": {
+        "name": "Netto geëxporteerde energie"
+      },
+      "hourly_net_balance": {
+        "name": "Huidige uurbalans"
+      },
+      "net_import_energy_daily": {
+        "name": "Dagelijkse netto-import"
+      },
+      "net_export_energy_daily": {
+        "name": "Dagelijkse netto-export"
+      },
+      "net_import_energy_monthly": {
+        "name": "Maandelijkse netto-import"
+      },
+      "net_export_energy_monthly": {
+        "name": "Maandelijkse netto-export"
+      },
+      "grid_flow": {
+        "name": "Netstroom",
+        "state": {
+          "importing": "Importeren",
+          "exporting": "Exporteren",
+          "idle": "In balans"
+        }
+      },
+      "battery_flow": {
+        "name": "Batterijstroom",
+        "state": {
+          "charging": "Laden",
+          "discharging": "Ontladen",
+          "idle": "Rust",
+          "not_available": "Batterij niet beschikbaar"
+        }
+      },
+      "active_alarms": {
+        "name": "Actieve alarmen"
+      },
+      "sse_diagnostics": {
+        "name": "SSE-diagnose",
+        "state": {
+          "connected": "Verbonden",
+          "disconnected": "Verbinding verbroken"
+        }
       }
     },
     "select": {
@@ -236,6 +332,18 @@
     "binary_sensor": {
       "sse_connected": {
         "name": "SSE-telemetrie verbonden"
+      },
+      "pv_active": {
+        "name": "PV-productie actief"
+      },
+      "grid_connected": {
+        "name": "Verbonden met het net"
+      },
+      "alarm_active": {
+        "name": "Alarm actief"
+      },
+      "power_reduction": {
+        "name": "Vermogensbeperking"
       }
     }
   },
@@ -254,6 +362,16 @@
     },
     "energy": {
       "name": "Ingeteam ISS · Energie"
+    }
+  },
+  "selector": {
+    "publish_interval": {
+      "options": {
+        "5": "Elke 5 seconden",
+        "10": "Elke 10 seconden",
+        "30": "Elke 30 seconden",
+        "sse": "Realtime — SSE (ritme van de omvormer)"
+      }
     }
   }
 }

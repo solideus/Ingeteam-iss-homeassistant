@@ -9,7 +9,41 @@
           "username": "Nazwa użytkownika",
           "password": "Hasło",
           "port": "Port HTTP",
-          "device_id": "ID falownika"
+          "device_id": "ID falownika",
+          "publish_interval": "Częstotliwość aktualizacji"
+        },
+        "data_description": {
+          "publish_interval": "SSE aktualizuje po otrzymaniu danych. Inne interwały ograniczają publikację, a nie odbiór ani obliczenia energii."
+        }
+      },
+      "reconfigure": {
+        "title": "Zmień konfigurację Ingeteam ISS",
+        "description": "Połączenie jest sprawdzane przed zapisem. Puste hasło zachowuje dotychczasowe hasło.",
+        "data": {
+          "host": "Adres IP lub nazwa hosta",
+          "username": "Nazwa użytkownika",
+          "password": "Hasło",
+          "port": "Port HTTP",
+          "device_id": "ID falownika",
+          "publish_interval": "Częstotliwość aktualizacji"
+        },
+        "data_description": {
+          "publish_interval": "SSE aktualizuje po otrzymaniu danych. Inne interwały ograniczają publikację, a nie odbiór ani obliczenia energii."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Zaktualizuj dane logowania",
+        "description": "Połączenie jest sprawdzane przed zapisem. Puste hasło zachowuje dotychczasowe hasło.",
+        "data": {
+          "host": "Adres IP lub nazwa hosta",
+          "username": "Nazwa użytkownika",
+          "password": "Hasło",
+          "port": "Port HTTP",
+          "device_id": "ID falownika",
+          "publish_interval": "Częstotliwość aktualizacji"
+        },
+        "data_description": {
+          "publish_interval": "SSE aktualizuje po otrzymaniu danych. Inne interwały ograniczają publikację, a nie odbiór ani obliczenia energii."
         }
       }
     },
@@ -17,10 +51,14 @@
       "cannot_connect": "Nie można połączyć się z falownikiem",
       "invalid_auth": "Nieprawidłowa nazwa użytkownika lub hasło",
       "unknown": "Nieoczekiwany błąd",
-      "invalid_connection_settings": "ID musi być liczbą całkowitą od 1 do 247, a port od 1 do 65535"
+      "invalid_connection_settings": "ID musi być liczbą całkowitą od 1 do 247, a port od 1 do 65535",
+      "unsupported_device": "Brak obsługiwanych rejestrów dla tego ID falownika.",
+      "different_device": "Numer seryjny należy do innego urządzenia. Historia nie zostanie połączona."
     },
     "abort": {
-      "already_configured": "Ten falownik jest już skonfigurowany"
+      "already_configured": "Ten falownik jest już skonfigurowany",
+      "reconfigure_successful": "Konfiguracja zaktualizowana.",
+      "reauth_successful": "Dane logowania zaktualizowane."
     }
   },
   "options": {
@@ -29,7 +67,11 @@
         "title": "Opcje Ingeteam ISS",
         "data": {
           "scan_interval": "Interwał odczytu HTTP (sekundy)",
-          "sse_timeout": "Limit czasu bez danych SSE (sekundy)"
+          "sse_timeout": "Limit czasu bez danych SSE (sekundy)",
+          "publish_interval": "Częstotliwość aktualizacji"
+        },
+        "data_description": {
+          "publish_interval": "SSE aktualizuje po otrzymaniu danych. Inne interwały ograniczają publikację, a nie odbiór ani obliczenia energii."
         }
       }
     }
@@ -153,6 +195,60 @@
       },
       "sse_last_disconnect": {
         "name": "Ostatnia przerwa SSE"
+      },
+      "load_energy_daily": {
+        "name": "Zużycie dzienne"
+      },
+      "load_energy_monthly": {
+        "name": "Zużycie miesięczne"
+      },
+      "net_import_energy": {
+        "name": "Energia pobrana netto"
+      },
+      "net_export_energy": {
+        "name": "Energia oddana netto"
+      },
+      "hourly_net_balance": {
+        "name": "Bilans netto bieżącej godziny"
+      },
+      "net_import_energy_daily": {
+        "name": "Dzienny pobór netto"
+      },
+      "net_export_energy_daily": {
+        "name": "Dzienne oddawanie netto"
+      },
+      "net_import_energy_monthly": {
+        "name": "Miesięczny pobór netto"
+      },
+      "net_export_energy_monthly": {
+        "name": "Miesięczne oddawanie netto"
+      },
+      "grid_flow": {
+        "name": "Przepływ sieci",
+        "state": {
+          "importing": "Pobieranie",
+          "exporting": "Oddawanie",
+          "idle": "Równowaga"
+        }
+      },
+      "battery_flow": {
+        "name": "Przepływ baterii",
+        "state": {
+          "charging": "Ładowanie",
+          "discharging": "Rozładowanie",
+          "idle": "Spoczynek",
+          "not_available": "Bateria niedostępna"
+        }
+      },
+      "active_alarms": {
+        "name": "Aktywne alarmy"
+      },
+      "sse_diagnostics": {
+        "name": "Diagnostyka SSE",
+        "state": {
+          "connected": "Połączono",
+          "disconnected": "Rozłączono"
+        }
       }
     },
     "select": {
@@ -236,6 +332,18 @@
     "binary_sensor": {
       "sse_connected": {
         "name": "Telemetria SSE połączona"
+      },
+      "pv_active": {
+        "name": "Produkcja PV aktywna"
+      },
+      "grid_connected": {
+        "name": "Połączenie z siecią"
+      },
+      "alarm_active": {
+        "name": "Aktywny alarm"
+      },
+      "power_reduction": {
+        "name": "Ograniczenie mocy"
       }
     }
   },
@@ -254,6 +362,16 @@
     },
     "energy": {
       "name": "Ingeteam ISS · Energia"
+    }
+  },
+  "selector": {
+    "publish_interval": {
+      "options": {
+        "5": "Co 5 sekund",
+        "10": "Co 10 sekund",
+        "30": "Co 30 sekund",
+        "sse": "Na bieżąco — SSE (rytm falownika)"
+      }
     }
   }
 }

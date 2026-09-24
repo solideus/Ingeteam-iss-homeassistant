@@ -107,10 +107,17 @@ async def system(tmp_path, monkeypatch):
         data["holding"][address, 8] = 8
 
     async def handle(request):
-        assert request.headers["Authorization"] == "Basic dGVzdGVyOnRlc3QtcGFzc3dvcmQ="
+        if request.headers["Authorization"] != "Basic dGVzdGVyOnRlc3QtcGFzc3dvcmQ=":
+            raise web.HTTPUnauthorized()
+        if request.path.startswith("/inverter/map/"):
+            return web.json_response(data.get("map", {}))
         if request.path == "/system/info/device":
             return web.json_response(
-                {"SerialNumber": "TEST-ISS", "HwType": "ABH0101", "ApiVersion": 102}
+                {
+                    "SerialNumber": data.get("serial", "TEST-ISS"),
+                    "HwType": "ABH0101",
+                    "ApiVersion": 102,
+                }
             )
         if request.path == SSE_PATH:
             assert request.headers["Accept"] == "text/event-stream"
@@ -245,7 +252,7 @@ def entity_id(hass, domain, key):
 async def test_setup_grouping_translated_names_and_pv(system):
     hass, entry, data = system
     entities = er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
-    assert len(entities) == 53
+    assert len(entities) == 70
     groups = dr.async_entries_for_config_entry(dr.async_get(hass), entry.entry_id)
     assert len(groups) == 6
     battery = next(d for d in groups if (DOMAIN, "TEST-ISS_battery") in d.identifiers)
@@ -656,6 +663,7 @@ async def test_periodic_save_is_not_postponed_by_every_event(system, monkeypatch
     hass, entry, data = system
     sse = entry.runtime_data.telemetry
     save = Mock()
+    sse._stored_data()  # Simulate completion of the save scheduled by the first frame.
     monkeypatch.setattr(sse._store, "async_delay_save", save)
     for _ in range(5):
         sse.async_receive(dict(sse.data))
@@ -664,6 +672,162 @@ async def test_periodic_save_is_not_postponed_by_every_event(system, monkeypatch
     persisted = save.call_args.args[0]()
     assert persisted["totals"] == sse.energy.totals
     assert not sse._save_pending
+
+
+async def test_reconfigure_preserves_identity_password_counters_and_single_connection(
+    system,
+):
+    hass, entry, data = system
+    before = {
+        e.unique_id: e.entity_id
+        for e in er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
+    }
+    entry.runtime_data.telemetry.energy.totals["load_energy"] = 123.456
+    entry.runtime_data.telemetry.accounting.values["net_import_energy"] = 77.0
+    flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
+    )
+    assert flow["step_id"] == "reconfigure"
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"],
+        {
+            "host": "localhost",
+            "username": "tester",
+            "password": "",
+            "port": entry.data["port"],
+            "device_id": 1,
+            "publish_interval": "10",
+        },
+    )
+    assert result["type"] == "abort" and result["reason"] == "reconfigure_successful"
+    await hass.async_block_till_done()
+    await wait_until(lambda: entry.runtime_data.telemetry.connected)
+    assert entry.data["password"] == "test-password"
+    assert entry.runtime_data.telemetry.publish_interval == 10
+    assert entry.runtime_data.telemetry.energy.totals["load_energy"] == 123.456
+    assert entry.runtime_data.telemetry.accounting.values["net_import_energy"] == 77
+    after = {
+        e.unique_id: e.entity_id
+        for e in er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
+    }
+    assert before == after
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    await wait_until(lambda: data["sse_active"] == 1)
+
+
+async def test_reconfigure_rejects_wrong_auth_and_different_inverter(system):
+    hass, entry, data = system
+    old = dict(entry.data)
+    flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
+    )
+    candidate = {k: old[k] for k in ("host", "port", "username", "device_id")}
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {**candidate, "password": "wrong"}
+    )
+    assert result["errors"]["base"] == "invalid_auth"
+    assert dict(entry.data) == old
+    data["serial"] = "OTHER-INVERTER"
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {**candidate, "password": ""}
+    )
+    assert result["errors"]["base"] == "different_device"
+    assert dict(entry.data) == old
+
+
+async def test_reauth_updates_same_entry(system):
+    hass, entry, data = system
+    flow = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "reauth", "entry_id": entry.entry_id},
+        data=dict(entry.data),
+    )
+    assert flow["step_id"] == "reauth_confirm"
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"],
+        {
+            "host": entry.data["host"],
+            "username": "tester",
+            "password": "test-password",
+            "port": entry.data["port"],
+            "device_id": 1,
+        },
+    )
+    assert result["reason"] == "reauth_successful"
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
+@pytest.mark.parametrize("frequency", ["sse", "5", "10", "30"])
+async def test_frequency_options_and_all_samples_still_integrated(system, frequency):
+    hass, entry, data = system
+    flow = await hass.config_entries.options.async_init(entry.entry_id)
+    await hass.config_entries.options.async_configure(
+        flow["flow_id"],
+        {"publish_interval": frequency, "scan_interval": 15, "sse_timeout": 30},
+    )
+    await hass.async_block_till_done()
+    sse = entry.runtime_data.telemetry
+    await wait_until(lambda: sse.connected)
+    assert sse.publish_interval == (0 if frequency == "sse" else int(frequency))
+    await wait_until(lambda: data["sse_active"] == 1)
+    old_event, frames = sse.last_event, sse.valid_frames
+    await emit(system, SCENARIOS["self_consumption"])
+    assert sse.last_event != old_event and sse.valid_frames == frames + 1
+    assert sse.latest_sample["total_load_power"] == 3200
+    state = hass.states.get(entity_id(hass, "sensor", "total_load_power"))
+    assert state.state == ("3200" if frequency == "sse" else "321")
+    sse._last_publish -= 31
+    await emit(system, SCENARIOS["self_consumption"])
+    assert hass.states.get(state.entity_id).state == "3200"
+
+
+async def test_alarm_events_do_not_clear_on_failed_read(system):
+    hass, entry, data = system
+    received = []
+    unsub = hass.bus.async_listen(
+        f"{DOMAIN}_alarm", lambda event: received.append(event.data)
+    )
+    data["online"][73, 0] = 4
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    assert received[-1]["active"] and received[-1]["bit"] == 2
+    assert not received[-1]["documented"]
+    data["online_failure"] = True
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    assert len(received) == 1
+    data["online_failure"] = False
+    data["online"][73, 0] = 0
+    await entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+    assert len(received) == 2 and not received[-1]["active"]
+    unsub()
+
+
+async def test_capabilities_filter_controls_and_reject_unsupported_writes(system):
+    hass, entry, data = system
+    data["map"] = {"holding": [{"add": 86, "start": 0}], "online": []}
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.runtime_data.api.supports("holding", 86)
+    assert not entry.runtime_data.api.supports("holding", 142)
+    with pytest.raises(HomeAssistantError, match="Unsupported"):
+        await entry.runtime_data.async_write(142, 0, 12)
+    assert not data["writes"]
+
+
+async def test_diagnostics_do_not_leak_credentials(system):
+    from custom_components.ingeteam_iss.diagnostics import (
+        async_get_config_entry_diagnostics,
+    )
+
+    hass, entry, data = system
+    diagnostics = await async_get_config_entry_diagnostics(hass, entry)
+    encoded = json.dumps(diagnostics)
+    for private in ("test-password", "tester", "127.0.0.1", "TEST-ISS"):
+        assert private not in encoded
+    assert diagnostics["telemetry"]["valid_frames"] >= 1
 
 
 async def test_unload_closes_sse_socket_and_task(system):

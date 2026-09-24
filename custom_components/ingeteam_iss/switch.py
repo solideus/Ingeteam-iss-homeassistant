@@ -55,7 +55,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up writable switches."""
-    async_add_entities(IngeteamSwitch(entry.runtime_data, desc) for desc in SWITCHES)
+    async_add_entities(
+        IngeteamSwitch(entry.runtime_data, desc)
+        for desc in SWITCHES
+        if entry.runtime_data.api.supports(
+            "holding", desc.register.address, desc.register.startbit
+        )
+    )
 
 
 class IngeteamSwitch(IngeteamEntity, SwitchEntity):

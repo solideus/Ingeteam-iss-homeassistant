@@ -221,7 +221,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up writable number entities."""
-    async_add_entities(IngeteamNumber(entry.runtime_data, desc) for desc in NUMBERS)
+    async_add_entities(
+        IngeteamNumber(entry.runtime_data, desc)
+        for desc in NUMBERS
+        if entry.runtime_data.api.supports(
+            "holding", desc.register.address, desc.register.startbit
+        )
+    )
 
 
 class IngeteamNumber(IngeteamEntity, NumberEntity):

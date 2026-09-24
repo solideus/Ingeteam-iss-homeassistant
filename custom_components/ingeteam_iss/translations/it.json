@@ -9,7 +9,41 @@
           "username": "Nome utente",
           "password": "Password",
           "port": "Porta HTTP",
-          "device_id": "ID inverter"
+          "device_id": "ID inverter",
+          "publish_interval": "Frequenza di aggiornamento"
+        },
+        "data_description": {
+          "publish_interval": "SSE aggiorna appena arrivano i dati. Gli altri intervalli limitano la pubblicazione, non la ricezione o il calcolo energetico."
+        }
+      },
+      "reconfigure": {
+        "title": "Riconfigura Ingeteam ISS",
+        "description": "La connessione viene verificata prima del salvataggio. Lascia vuota la password per mantenere quella attuale.",
+        "data": {
+          "host": "Indirizzo IP o nome host",
+          "username": "Nome utente",
+          "password": "Password",
+          "port": "Porta HTTP",
+          "device_id": "ID inverter",
+          "publish_interval": "Frequenza di aggiornamento"
+        },
+        "data_description": {
+          "publish_interval": "SSE aggiorna appena arrivano i dati. Gli altri intervalli limitano la pubblicazione, non la ricezione o il calcolo energetico."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Aggiorna credenziali",
+        "description": "La connessione viene verificata prima del salvataggio. Lascia vuota la password per mantenere quella attuale.",
+        "data": {
+          "host": "Indirizzo IP o nome host",
+          "username": "Nome utente",
+          "password": "Password",
+          "port": "Porta HTTP",
+          "device_id": "ID inverter",
+          "publish_interval": "Frequenza di aggiornamento"
+        },
+        "data_description": {
+          "publish_interval": "SSE aggiorna appena arrivano i dati. Gli altri intervalli limitano la pubblicazione, non la ricezione o il calcolo energetico."
         }
       }
     },
@@ -17,10 +51,14 @@
       "cannot_connect": "Impossibile connettersi all’inverter",
       "invalid_auth": "Nome utente o password errati",
       "unknown": "Errore imprevisto",
-      "invalid_connection_settings": "L’ID deve essere un intero da 1 a 247 e la porta da 1 a 65535"
+      "invalid_connection_settings": "L’ID deve essere un intero da 1 a 247 e la porta da 1 a 65535",
+      "unsupported_device": "Nessun registro compatibile trovato per questo ID inverter.",
+      "different_device": "Il numero di serie appartiene a un altro dispositivo. Le cronologie non saranno unite."
     },
     "abort": {
-      "already_configured": "Questo inverter è già configurato"
+      "already_configured": "Questo inverter è già configurato",
+      "reconfigure_successful": "Configurazione aggiornata.",
+      "reauth_successful": "Credenziali aggiornate."
     }
   },
   "options": {
@@ -29,7 +67,11 @@
         "title": "Opzioni Ingeteam ISS",
         "data": {
           "scan_interval": "Intervallo di lettura HTTP (secondi)",
-          "sse_timeout": "Tempo senza dati SSE (secondi)"
+          "sse_timeout": "Tempo senza dati SSE (secondi)",
+          "publish_interval": "Frequenza di aggiornamento"
+        },
+        "data_description": {
+          "publish_interval": "SSE aggiorna appena arrivano i dati. Gli altri intervalli limitano la pubblicazione, non la ricezione o il calcolo energetico."
         }
       }
     }
@@ -153,6 +195,60 @@
       },
       "sse_last_disconnect": {
         "name": "Ultima interruzione SSE"
+      },
+      "load_energy_daily": {
+        "name": "Consumo giornaliero"
+      },
+      "load_energy_monthly": {
+        "name": "Consumo mensile"
+      },
+      "net_import_energy": {
+        "name": "Energia netta importata"
+      },
+      "net_export_energy": {
+        "name": "Energia netta esportata"
+      },
+      "hourly_net_balance": {
+        "name": "Bilancio netto dell’ora corrente"
+      },
+      "net_import_energy_daily": {
+        "name": "Importazione netta giornaliera"
+      },
+      "net_export_energy_daily": {
+        "name": "Esportazione netta giornaliera"
+      },
+      "net_import_energy_monthly": {
+        "name": "Importazione netta mensile"
+      },
+      "net_export_energy_monthly": {
+        "name": "Esportazione netta mensile"
+      },
+      "grid_flow": {
+        "name": "Flusso di rete",
+        "state": {
+          "importing": "Importazione",
+          "exporting": "Esportazione",
+          "idle": "Bilanciato"
+        }
+      },
+      "battery_flow": {
+        "name": "Flusso batteria",
+        "state": {
+          "charging": "Carica",
+          "discharging": "Scarica",
+          "idle": "Riposo",
+          "not_available": "Batteria non disponibile"
+        }
+      },
+      "active_alarms": {
+        "name": "Allarmi attivi"
+      },
+      "sse_diagnostics": {
+        "name": "Diagnostica SSE",
+        "state": {
+          "connected": "Connesso",
+          "disconnected": "Disconnesso"
+        }
       }
     },
     "select": {
@@ -236,6 +332,18 @@
     "binary_sensor": {
       "sse_connected": {
         "name": "Telemetria SSE connessa"
+      },
+      "pv_active": {
+        "name": "Produzione FV attiva"
+      },
+      "grid_connected": {
+        "name": "Connesso alla rete"
+      },
+      "alarm_active": {
+        "name": "Allarme attivo"
+      },
+      "power_reduction": {
+        "name": "Riduzione di potenza"
       }
     }
   },
@@ -254,6 +362,16 @@
     },
     "energy": {
       "name": "Ingeteam ISS · Energia"
+    }
+  },
+  "selector": {
+    "publish_interval": {
+      "options": {
+        "5": "Ogni 5 secondi",
+        "10": "Ogni 10 secondi",
+        "30": "Ogni 30 secondi",
+        "sse": "Tempo reale — SSE (ritmo dell’inverter)"
+      }
     }
   }
 }

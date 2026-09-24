@@ -9,7 +9,41 @@
           "username": "Benutzername",
           "password": "Passwort",
           "port": "HTTP-Port",
-          "device_id": "Wechselrichter-ID"
+          "device_id": "Wechselrichter-ID",
+          "publish_interval": "Aktualisierungsintervall"
+        },
+        "data_description": {
+          "publish_interval": "SSE aktualisiert sofort bei neuen Daten. Andere Intervalle begrenzen nur die Veröffentlichung, nicht Empfang oder Energieberechnung."
+        }
+      },
+      "reconfigure": {
+        "title": "Ingeteam ISS neu konfigurieren",
+        "description": "Die Verbindung wird vor dem Speichern geprüft. Ein leeres Passwort behält das bisherige Passwort bei.",
+        "data": {
+          "host": "IP-Adresse oder Hostname",
+          "username": "Benutzername",
+          "password": "Passwort",
+          "port": "HTTP-Port",
+          "device_id": "Wechselrichter-ID",
+          "publish_interval": "Aktualisierungsintervall"
+        },
+        "data_description": {
+          "publish_interval": "SSE aktualisiert sofort bei neuen Daten. Andere Intervalle begrenzen nur die Veröffentlichung, nicht Empfang oder Energieberechnung."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Zugangsdaten erneuern",
+        "description": "Die Verbindung wird vor dem Speichern geprüft. Ein leeres Passwort behält das bisherige Passwort bei.",
+        "data": {
+          "host": "IP-Adresse oder Hostname",
+          "username": "Benutzername",
+          "password": "Passwort",
+          "port": "HTTP-Port",
+          "device_id": "Wechselrichter-ID",
+          "publish_interval": "Aktualisierungsintervall"
+        },
+        "data_description": {
+          "publish_interval": "SSE aktualisiert sofort bei neuen Daten. Andere Intervalle begrenzen nur die Veröffentlichung, nicht Empfang oder Energieberechnung."
         }
       }
     },
@@ -17,10 +51,14 @@
       "cannot_connect": "Verbindung zum Wechselrichter fehlgeschlagen",
       "invalid_auth": "Benutzername oder Passwort falsch",
       "unknown": "Unerwarteter Fehler",
-      "invalid_connection_settings": "Die ID muss eine ganze Zahl von 1 bis 247 und der Port von 1 bis 65535 sein"
+      "invalid_connection_settings": "Die ID muss eine ganze Zahl von 1 bis 247 und der Port von 1 bis 65535 sein",
+      "unsupported_device": "Keine unterstützten Register für diese Wechselrichter-ID gefunden.",
+      "different_device": "Die Seriennummer gehört zu einem anderen Gerät. Historien werden nicht vermischt."
     },
     "abort": {
-      "already_configured": "Dieser Wechselrichter ist bereits konfiguriert"
+      "already_configured": "Dieser Wechselrichter ist bereits konfiguriert",
+      "reconfigure_successful": "Konfiguration aktualisiert.",
+      "reauth_successful": "Zugangsdaten aktualisiert."
     }
   },
   "options": {
@@ -29,7 +67,11 @@
         "title": "Ingeteam ISS Optionen",
         "data": {
           "scan_interval": "HTTP-Abfrageintervall (Sekunden)",
-          "sse_timeout": "Zeitlimit ohne SSE-Daten (Sekunden)"
+          "sse_timeout": "Zeitlimit ohne SSE-Daten (Sekunden)",
+          "publish_interval": "Aktualisierungsintervall"
+        },
+        "data_description": {
+          "publish_interval": "SSE aktualisiert sofort bei neuen Daten. Andere Intervalle begrenzen nur die Veröffentlichung, nicht Empfang oder Energieberechnung."
         }
       }
     }
@@ -153,6 +195,60 @@
       },
       "sse_last_disconnect": {
         "name": "Letzte SSE-Unterbrechung"
+      },
+      "load_energy_daily": {
+        "name": "Täglicher Verbrauch"
+      },
+      "load_energy_monthly": {
+        "name": "Monatlicher Verbrauch"
+      },
+      "net_import_energy": {
+        "name": "Netto-Netzbezug"
+      },
+      "net_export_energy": {
+        "name": "Netto-Einspeisung"
+      },
+      "hourly_net_balance": {
+        "name": "Aktuelle Stundenbilanz"
+      },
+      "net_import_energy_daily": {
+        "name": "Täglicher Netto-Netzbezug"
+      },
+      "net_export_energy_daily": {
+        "name": "Tägliche Netto-Einspeisung"
+      },
+      "net_import_energy_monthly": {
+        "name": "Monatlicher Netto-Netzbezug"
+      },
+      "net_export_energy_monthly": {
+        "name": "Monatliche Netto-Einspeisung"
+      },
+      "grid_flow": {
+        "name": "Netzfluss",
+        "state": {
+          "importing": "Import",
+          "exporting": "Export",
+          "idle": "Ausgeglichen"
+        }
+      },
+      "battery_flow": {
+        "name": "Batteriefluss",
+        "state": {
+          "charging": "Laden",
+          "discharging": "Entladen",
+          "idle": "Ruhezustand",
+          "not_available": "Batterie nicht verfügbar"
+        }
+      },
+      "active_alarms": {
+        "name": "Aktive Alarme"
+      },
+      "sse_diagnostics": {
+        "name": "SSE-Diagnose",
+        "state": {
+          "connected": "Verbunden",
+          "disconnected": "Getrennt"
+        }
       }
     },
     "select": {
@@ -236,6 +332,18 @@
     "binary_sensor": {
       "sse_connected": {
         "name": "SSE-Telemetrie verbunden"
+      },
+      "pv_active": {
+        "name": "PV-Produktion aktiv"
+      },
+      "grid_connected": {
+        "name": "Mit Netz verbunden"
+      },
+      "alarm_active": {
+        "name": "Alarm aktiv"
+      },
+      "power_reduction": {
+        "name": "Leistungsreduzierung"
       }
     }
   },
@@ -254,6 +362,16 @@
     },
     "energy": {
       "name": "Ingeteam ISS · Energie"
+    }
+  },
+  "selector": {
+    "publish_interval": {
+      "options": {
+        "5": "Alle 5 Sekunden",
+        "10": "Alle 10 Sekunden",
+        "30": "Alle 30 Sekunden",
+        "sse": "Echtzeit — SSE (Takt des Wechselrichters)"
+      }
     }
   }
 }

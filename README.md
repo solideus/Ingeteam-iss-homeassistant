@@ -1,16 +1,16 @@
-# Ingeteam ISS for Home Assistant — 0.4.0
+# Ingeteam ISS for Home Assistant — 0.5.0
 
 [Español](README.es.md) · [Testing](docs/VALIDATION.md) · [Telemetry and energy](docs/TELEMETRY_ENERGY.md) · [Publishing](docs/PUBLISHING.md)
 
 Unofficial local integration for the Ingeteam INGECON SUN STORAGE ISS 6TL.
-Version 0.4.0 retains the working controls, schedules, groups, entity identities
-and brand assets from 0.3.0, and adds SSE telemetry and integrated energy.
+Version 0.5.0 retains the working controls, schedules, groups and entity identities
+from 0.4.0, adding hourly net energy, calendar consumption and reconfiguration.
 No cloud, MQTT broker or Node-RED is required. Setup never writes inverter settings.
 
 ## Requirements
 
 - Home Assistant Core **2026.3.0 or later**.
-- Required reference firmware **ABH1007AE** on the tested ISS installation:
+- Tested reference firmware **ABH1007AE** on the ISS installation:
   API 102, web 6.1.0, communication board ABH0101.
 - Local HTTP access, normally port 80.
 - **Create a dedicated Home Assistant user in the inverter configuration portal.
@@ -18,11 +18,11 @@ No cloud, MQTT broker or Node-RED is required. Setup never writes inverter setti
   from other users' portal changes. Lower permission levels cannot write some
   settings.
 
-The supplied properties response also identifies `ABH1006AC`. It is not
-automatically compared against `ABH1007AE`: these identifiers have not been
-established as the same firmware component/layer. The requirement is documented,
-not an automatic firmware gate or update operation. Other firmware/models are
-not assumed compatible.
+`ABH1007AE` is the portal firmware reference. `ABH1006AC` identifies the internal
+map/firmware layer and is not treated as the portal version. Older firmware may
+be tried with possible incompatibilities; future firmware is not automatically
+certified. The integration uses the connected device's capability map, without
+blocking installation solely because of a firmware version string.
 
 HTTP Basic credentials are not encrypted in transit. Use a trusted LAN and
 never expose the inverter HTTP port to the Internet. Remove credentials and
@@ -30,16 +30,33 @@ identifiers from reports and logs.
 
 ## Included
 
-53 registered entities in 6 devices/groups, retaining all 40 existing unique IDs:
+Up to 70 registered entities in 6 devices/groups, retaining all 53 existing unique IDs:
 
 | Group | Contents |
 |---|---|
-| Main inverter | 13 power/battery sensors, SSE connectivity, 2 optional diagnostic timestamps |
+| Main inverter | Power/battery sensors, grid/battery flow states, alarms and SSE diagnostics |
 | Battery management | 5 SOC settings, 2 BMS current limits, BMS-requested SOC calibration permission |
 | Scheduled grid charging | Maximum power, 2 SOC targets, 2 schedule modes, 4 times |
 | Scheduled discharging | Maximum battery export, 2 SOC limits, 2 battery-use modes, 2 schedule modes, 4 times |
 | Grid and surplus | Maximum PV export, priority and peak-shaving controls |
-| Energy | 6 lifetime calculated energy counters |
+| Energy | 6 existing lifetime counters, daily/monthly consumption, hourly net balance and net counters |
+
+## New in 0.5.0
+
+- **Real time — SSE**, **5 s**, **10 s** or **30 s** publication cadence. The
+  inverter sets SSE timing; all samples still feed energy calculations.
+- **Reconfigure** connection details and cadence without deleting the entry.
+  Reauthentication and automatic migration retain identities and stored energy.
+- Daily/monthly household consumption and persistent hourly net import/export.
+  Net lifetime totals never reset; separate daily/monthly net meters are included.
+- Automation states, map-based alarm descriptions and activation/clearing events.
+- Downloadable diagnostics and an optional detailed SSE diagnostic entity.
+- Capability-based reads/controls, retaining unknown alarm codes explicitly.
+
+See [0.5.0 operation, upgrade and limitations](docs/VERSION_0.5.0.md). New calendar
+and net counters begin at upgrade; they do not reconstruct earlier history.
+For hourly netting in the Energy dashboard select **Net imported energy** and
+**Net exported energy** in place of gross grid counters, not in addition to them.
 
 BMS maximum charge current (HR86) and maximum on-grid discharge current (HR142)
 now use **sliders: 0–66 A, step 1 A**. The range is not a recommendation for the
