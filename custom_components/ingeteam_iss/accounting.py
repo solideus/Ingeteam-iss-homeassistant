@@ -106,6 +106,9 @@ class CalendarEnergy:
 
     def tick(self, timestamp: float) -> None:
         """Close idle hours once safely past the boundary; never invent energy."""
+        if self.hour is not None and timestamp < self.hour:
+            self.break_interval()
+            return  # A wall-clock rollback must not reset calendar totals.
         if self.hour is not None and timestamp >= self.hour + 3605:
             self._hour(timestamp)
         self._period(timestamp)

@@ -110,3 +110,13 @@ def test_documented_alarms_follow_connected_map_not_assumed_firmware():
     alarms, _ = decode_alarms({(10, 0): 7}, mapping, "es")
     assert [a["documented"] for a in alarms] == [True, False, False]
     assert alarms[0]["description"] == "Fallo de prueba"
+
+
+def test_maintenance_clock_rollback_preserves_calendar_totals():
+    acc = CalendarEnergy("Europe/Madrid")
+    stamp = timestamp("2026-10-01T00:00:00")
+    acc.update(sample(3600), 0, stamp)
+    acc.update(sample(3600), 1, stamp + 1)
+    before = acc.dump()
+    acc.tick(stamp - 86400)
+    assert acc.dump() == before
