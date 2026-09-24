@@ -1,16 +1,16 @@
-# Ingeteam ISS para Home Assistant — 0.4.0
+# Ingeteam ISS para Home Assistant — 0.5.0
 
 [English](README.md) · [Instalación y pruebas](docs/VALIDATION.md) · [Telemetría y energía](docs/TELEMETRY_ENERGY.md) · [Publicación](docs/PUBLISHING.md)
 
 Integración local **no oficial** para el Ingeteam INGECON SUN STORAGE ISS 6TL.
 Esta versión conserva los controles, horarios, grupos, identificadores e icono de
-la 0.3.0 y añade telemetría SSE y contadores de energía. No necesita Node-RED,
+la 0.4.0 y añade balance neto horario, consumo diario/mensual y reconfiguración. No necesita Node-RED,
 MQTT ni servicios en la nube. No escribe parámetros durante la instalación.
 
 ## Requisitos y acceso
 
 - Home Assistant Core **2026.3.0 o posterior**.
-- Firmware de referencia requerido: **ABH1007AE**, en el equipo probado
+- Firmware de referencia comprobado: **ABH1007AE**, en el equipo probado
   (API 102, web 6.1.0, tarjeta ABH0101). No se presupone compatibilidad con otros
   modelos o versiones.
 - Acceso local HTTP al inversor, normalmente puerto 80.
@@ -20,16 +20,36 @@ MQTT ni servicios en la nube. No escribe parámetros durante la instalación.
   realizados por otros usuarios en el portal. Los niveles inferiores no
   permiten escribir determinados parámetros.
 
-La respuesta de propiedades aportada identifica además `ABH1006AC`. No se
-compara ese campo automáticamente con `ABH1007AE`: no está demostrado que ambos
-identifiquen el mismo componente o la misma capa de firmware. El requisito es
-documental; esta versión no instala, actualiza ni bloquea firmware.
+`ABH1007AE` es el firmware del portal. `ABH1006AC` pertenece a la capa interna
+del inversor/mapa y no se utiliza como requisito público. Se permite probar
+firmwares anteriores, con posibles incompatibilidades. La integración detecta
+capacidades mediante el mapa del equipo; un firmware futuro no queda certificado
+automáticamente por ser más reciente.
 
 HTTP Basic no cifra las credenciales. Utiliza únicamente una red local de
 confianza; no expongas el puerto HTTP del inversor a Internet. No incluyas
 contraseñas en incidencias, capturas ni automatizaciones.
 
 ## Novedades
+
+- Frecuencia: **Tiempo real — SSE (ritmo del inversor)**, **5**, **10** o **30 s**.
+  Limita la publicación de estados, conservando todas las muestras para energía.
+- **Reconfigurar** permite cambiar IP/host, puerto, usuario, contraseña, ID y
+  frecuencia sin eliminar la integración. Contraseña vacía conserva la actual.
+- Reautenticación y migración automática, conservando identificadores e históricos.
+- Consumo diario y mensual según la zona horaria de Home Assistant.
+- Balance neto horario: acumulados de importación/exportación netas sin reinicios,
+  saldo de la hora en curso y medidores netos diarios/mensuales independientes.
+- Estados para automatizaciones, alarmas legibles según el mapa, eventos de
+  activación/desactivación y códigos desconocidos conservados.
+- Diagnóstico SSE ampliado y descarga de diagnóstico sin credenciales.
+- Detección de capacidades y protección frente a escrituras no soportadas.
+
+Los nuevos contadores comienzan al actualizar: no reconstruyen la parte anterior
+del día/mes. Actualiza desde HACS y reinicia Home Assistant, sin borrar la entrada.
+La guía [0.5.0: funcionamiento y límites](docs/VERSION_0.5.0.md) describe las reglas.
+
+Se conservan las funciones anteriores:
 
 - SSE directo en `/system/events/sse/stream`, seleccionando
   `/ems/sse/phases` y el agregado `Phase = 4`.
@@ -47,10 +67,9 @@ contraseñas en incidencias, capturas ni automatizaciones.
 - Nuevas etiquetas traducidas en español, inglés, francés, alemán, italiano,
   portugués, neerlandés y polaco.
 
-Se registran **53 entidades** en **6 dispositivos/grupos**: los 40 identificadores
-anteriores, 4 potencias direccionales, 6 energías, 1 diagnóstico de conexión y
-2 fechas de diagnóstico deshabilitadas por defecto. Los nombres personalizados
-y las automatizaciones existentes se conservan.
+Se registran hasta **70 entidades** en los mismos **6 dispositivos/grupos**,
+según las capacidades del equipo. Se conservan los 53 identificadores de la 0.4.0,
+los nombres personalizados y las automatizaciones existentes.
 
 ## Fuentes de datos
 
@@ -121,6 +140,12 @@ Las diferencias observadas entre `pv`, los strings, `PacDischarge` y los flujos
 internos pueden trasladarse al balance del panel.
 
 ### Panel de Energía
+
+Para usar balance neto horario, selecciona **Energía importada neta** y
+**Energía exportada neta** en los apartados de red, sustituyendo los contadores
+brutos de esos flujos. No añadas ambos a la vez. El saldo horario es positivo
+cuando hay excedente acumulado y negativo cuando predomina la importación.
+La integración no cambia el panel ni traslada estadísticas automáticamente.
 
 | Apartado | Sensor nuevo |
 |---|---|

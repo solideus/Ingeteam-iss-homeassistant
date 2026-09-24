@@ -115,7 +115,7 @@ def decode_telemetry(event: SSEEvent) -> dict[str, float | None] | None:
     discharge = (
         finite_number(phase.get("PacDischarge"), minimum=0) if battery_valid else None
     )
-    return {
+    result = {
         "pv_total_power": pv,
         "total_load_power": load,
         "external_grid_power": grid,
@@ -132,3 +132,5 @@ def decode_telemetry(event: SSEEvent) -> dict[str, float | None] | None:
         else None,
         "battery_status": status,
     }
+    result["inverter_status"] = finite_number(phase.get("S1P_StatusCode"))
+    return result

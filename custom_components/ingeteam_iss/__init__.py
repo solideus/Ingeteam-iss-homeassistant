@@ -18,10 +18,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import IngeteamApi, IngeteamApiError, IngeteamAuthError
 from .const import (
     CONF_DEVICE_ID,
+    CONF_PUBLISH_INTERVAL,
     CONF_SCAN_INTERVAL,
     CONF_SSE_TIMEOUT,
     DEFAULT_DEVICE_ID,
     DEFAULT_PORT,
+    DEFAULT_PUBLISH_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SSE_TIMEOUT,
     PLATFORMS,
@@ -49,12 +51,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: IngeteamConfigEntry) -> 
         config_entry=entry,
         sse_timeout=entry.options.get(CONF_SSE_TIMEOUT, DEFAULT_SSE_TIMEOUT),
     )
+    coordinator.telemetry.publish_interval = float(
+        entry.options.get(
+            CONF_PUBLISH_INTERVAL,
+            entry.data.get(CONF_PUBLISH_INTERVAL, DEFAULT_PUBLISH_INTERVAL),
+        ).replace("sse", "0")
+    )
     try:
         coordinator.device_info = await api.async_device_info()
+        await api.async_load_capabilities()
     except IngeteamAuthError as err:
         raise ConfigEntryAuthFailed(str(err)) from err
     except IngeteamApiError as err:
         raise ConfigEntryNotReady(str(err)) from err
+    coordinator.identity = (
+        entry.data.get("identity")
+        or entry.unique_id
+        or coordinator.device_info.get("SerialNumber")
+        or api.host
+    )
+    coordinator.telemetry.identity = coordinator.identity
     await coordinator.async_config_entry_first_refresh()
     coordinator.telemetry.device_info = coordinator.device_info
     await coordinator.telemetry.async_load_energy()
@@ -70,6 +86,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: IngeteamConfigEntry) -> 
         )
     )
     coordinator.telemetry.async_start()
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Keep the 0.4.0 identity and energy storage key across configuration edits."""
+    if entry.version > 2:
+        return False
+    if entry.version == 1:
+        data = {**entry.data, "identity": entry.unique_id or entry.data[CONF_HOST]}
+        data.setdefault(CONF_PUBLISH_INTERVAL, DEFAULT_PUBLISH_INTERVAL)
+        hass.config_entries.async_update_entry(entry, data=data, version=2)
     return True
 
 

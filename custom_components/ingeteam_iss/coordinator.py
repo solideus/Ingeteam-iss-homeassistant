@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .alarms import decode_alarms
 from .api import IngeteamApi, IngeteamApiError, IngeteamAuthError
 from .const import DEFAULT_SCAN_INTERVAL, DEFAULT_SSE_TIMEOUT, DOMAIN
 from .telemetry import IngeteamTelemetryCoordinator
@@ -41,6 +42,9 @@ class IngeteamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = api
         self.device_info: dict[str, Any] = {}
         self._operation_lock = asyncio.Lock()
+        self.alarms: list[dict] = []
+        self.raw_alarms: dict = {}
+        self._alarm_snapshot: dict = {}
         self.telemetry = IngeteamTelemetryCoordinator(
             hass, api, config_entry=config_entry, timeout=sse_timeout
         )
@@ -59,6 +63,31 @@ class IngeteamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except IngeteamApiError as err:
                 _LOGGER.debug("Live telemetry update failed: %s", err)
                 online = {}
+            self.alarms, self.raw_alarms = decode_alarms(
+                online, self.api.capabilities, self.hass.config.language
+            )
+            current = {(a["address"], a["bit"]): a for a in self.alarms}
+            valid_addresses = {address for address, _ in online}
+            for key in self._alarm_snapshot.keys() | current.keys():
+                if key[0] not in valid_addresses:
+                    continue  # A failed read is not an alarm clearing.
+                if (key in current) != (key in self._alarm_snapshot):
+                    self.hass.bus.async_fire(
+                        f"{DOMAIN}_alarm",
+                        {
+                            **(current.get(key) or self._alarm_snapshot[key]),
+                            "active": key in current,
+                            "entry_id": self.config_entry.entry_id,
+                        },
+                    )
+            self._alarm_snapshot = {
+                **{
+                    k: v
+                    for k, v in self._alarm_snapshot.items()
+                    if k[0] not in valid_addresses
+                },
+                **current,
+            }
             return {"holding": holding, "online": online}
 
     async def async_write(self, address: int, startbit: int, value: int) -> None:

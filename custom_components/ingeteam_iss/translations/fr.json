@@ -9,7 +9,41 @@
           "username": "Nom d’utilisateur",
           "password": "Mot de passe",
           "port": "Port HTTP",
-          "device_id": "Identifiant de l’onduleur"
+          "device_id": "Identifiant de l’onduleur",
+          "publish_interval": "Fréquence de mise à jour"
+        },
+        "data_description": {
+          "publish_interval": "SSE actualise dès réception des données. Les autres intervalles limitent la publication, pas la réception ni le calcul énergétique."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigurer Ingeteam ISS",
+        "description": "La connexion est vérifiée avant l’enregistrement. Laissez le mot de passe vide pour conserver le précédent.",
+        "data": {
+          "host": "Adresse IP ou nom d’hôte",
+          "username": "Nom d’utilisateur",
+          "password": "Mot de passe",
+          "port": "Port HTTP",
+          "device_id": "Identifiant de l’onduleur",
+          "publish_interval": "Fréquence de mise à jour"
+        },
+        "data_description": {
+          "publish_interval": "SSE actualise dès réception des données. Les autres intervalles limitent la publication, pas la réception ni le calcul énergétique."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Renouveler les identifiants",
+        "description": "La connexion est vérifiée avant l’enregistrement. Laissez le mot de passe vide pour conserver le précédent.",
+        "data": {
+          "host": "Adresse IP ou nom d’hôte",
+          "username": "Nom d’utilisateur",
+          "password": "Mot de passe",
+          "port": "Port HTTP",
+          "device_id": "Identifiant de l’onduleur",
+          "publish_interval": "Fréquence de mise à jour"
+        },
+        "data_description": {
+          "publish_interval": "SSE actualise dès réception des données. Les autres intervalles limitent la publication, pas la réception ni le calcul énergétique."
         }
       }
     },
@@ -17,10 +51,14 @@
       "cannot_connect": "Connexion à l’onduleur impossible",
       "invalid_auth": "Nom d’utilisateur ou mot de passe incorrect",
       "unknown": "Erreur inattendue",
-      "invalid_connection_settings": "L’identifiant doit être un entier de 1 à 247 et le port de 1 à 65535"
+      "invalid_connection_settings": "L’identifiant doit être un entier de 1 à 247 et le port de 1 à 65535",
+      "unsupported_device": "Aucun registre compatible trouvé pour cet identifiant d’onduleur.",
+      "different_device": "Le numéro de série correspond à un autre appareil. Les historiques ne seront pas mélangés."
     },
     "abort": {
-      "already_configured": "Cet onduleur est déjà configuré"
+      "already_configured": "Cet onduleur est déjà configuré",
+      "reconfigure_successful": "Configuration mise à jour.",
+      "reauth_successful": "Identifiants mis à jour."
     }
   },
   "options": {
@@ -29,7 +67,11 @@
         "title": "Options Ingeteam ISS",
         "data": {
           "scan_interval": "Intervalle de lecture HTTP (secondes)",
-          "sse_timeout": "Délai sans données SSE (secondes)"
+          "sse_timeout": "Délai sans données SSE (secondes)",
+          "publish_interval": "Fréquence de mise à jour"
+        },
+        "data_description": {
+          "publish_interval": "SSE actualise dès réception des données. Les autres intervalles limitent la publication, pas la réception ni le calcul énergétique."
         }
       }
     }
@@ -153,6 +195,60 @@
       },
       "sse_last_disconnect": {
         "name": "Dernière interruption SSE"
+      },
+      "load_energy_daily": {
+        "name": "Consommation quotidienne"
+      },
+      "load_energy_monthly": {
+        "name": "Consommation mensuelle"
+      },
+      "net_import_energy": {
+        "name": "Énergie importée nette"
+      },
+      "net_export_energy": {
+        "name": "Énergie exportée nette"
+      },
+      "hourly_net_balance": {
+        "name": "Bilan net de l’heure en cours"
+      },
+      "net_import_energy_daily": {
+        "name": "Importation nette quotidienne"
+      },
+      "net_export_energy_daily": {
+        "name": "Exportation nette quotidienne"
+      },
+      "net_import_energy_monthly": {
+        "name": "Importation nette mensuelle"
+      },
+      "net_export_energy_monthly": {
+        "name": "Exportation nette mensuelle"
+      },
+      "grid_flow": {
+        "name": "Flux réseau",
+        "state": {
+          "importing": "Importation",
+          "exporting": "Exportation",
+          "idle": "Équilibré"
+        }
+      },
+      "battery_flow": {
+        "name": "Flux batterie",
+        "state": {
+          "charging": "Charge",
+          "discharging": "Décharge",
+          "idle": "Repos",
+          "not_available": "Batterie indisponible"
+        }
+      },
+      "active_alarms": {
+        "name": "Alarmes actives"
+      },
+      "sse_diagnostics": {
+        "name": "Diagnostic SSE",
+        "state": {
+          "connected": "Connecté",
+          "disconnected": "Déconnecté"
+        }
       }
     },
     "select": {
@@ -236,6 +332,18 @@
     "binary_sensor": {
       "sse_connected": {
         "name": "Télémétrie SSE connectée"
+      },
+      "pv_active": {
+        "name": "Production PV active"
+      },
+      "grid_connected": {
+        "name": "Connecté au réseau"
+      },
+      "alarm_active": {
+        "name": "Alarme active"
+      },
+      "power_reduction": {
+        "name": "Réduction de puissance"
       }
     }
   },
@@ -254,6 +362,16 @@
     },
     "energy": {
       "name": "Ingeteam ISS · Énergie"
+    }
+  },
+  "selector": {
+    "publish_interval": {
+      "options": {
+        "5": "Toutes les 5 secondes",
+        "10": "Toutes les 10 secondes",
+        "30": "Toutes les 30 secondes",
+        "sse": "Temps réel — SSE (rythme de l’onduleur)"
+      }
     }
   }
 }

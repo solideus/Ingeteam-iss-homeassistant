@@ -9,7 +9,41 @@
           "username": "Username",
           "password": "Password",
           "port": "HTTP port",
-          "device_id": "Inverter ID"
+          "device_id": "Inverter ID",
+          "publish_interval": "Update frequency"
+        },
+        "data_description": {
+          "publish_interval": "SSE: update as soon as the inverter sends data. Other intervals limit publication, not reception or energy calculation."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Ingeteam ISS",
+        "description": "Connection is checked before saving. Leave the password empty to keep it. Existing entities and history are preserved for the same device.",
+        "data": {
+          "host": "IP address or host name",
+          "username": "Username",
+          "password": "Password",
+          "port": "HTTP port",
+          "device_id": "Inverter ID",
+          "publish_interval": "Update frequency"
+        },
+        "data_description": {
+          "publish_interval": "SSE: update as soon as the inverter sends data. Other intervals limit publication, not reception or energy calculation."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Renew credentials",
+        "description": "Connection is checked before saving. Leave the password empty to keep it. Existing entities and history are preserved for the same device.",
+        "data": {
+          "host": "IP address or host name",
+          "username": "Username",
+          "password": "Password",
+          "port": "HTTP port",
+          "device_id": "Inverter ID",
+          "publish_interval": "Update frequency"
+        },
+        "data_description": {
+          "publish_interval": "SSE: update as soon as the inverter sends data. Other intervals limit publication, not reception or energy calculation."
         }
       }
     },
@@ -17,10 +51,14 @@
       "cannot_connect": "Could not connect to the inverter",
       "invalid_auth": "Invalid username or password",
       "unknown": "Unexpected error",
-      "invalid_connection_settings": "The ID must be an integer from 1 to 247 and the port from 1 to 65535"
+      "invalid_connection_settings": "The ID must be an integer from 1 to 247 and the port from 1 to 65535",
+      "unsupported_device": "No compatible registers found for this inverter ID.",
+      "different_device": "The serial number belongs to a different device. Its history cannot be mixed."
     },
     "abort": {
-      "already_configured": "This inverter is already configured"
+      "already_configured": "This inverter is already configured",
+      "reconfigure_successful": "Configuration updated.",
+      "reauth_successful": "Credentials updated."
     }
   },
   "options": {
@@ -29,7 +67,11 @@
         "title": "Ingeteam ISS options",
         "data": {
           "scan_interval": "HTTP polling interval (seconds)",
-          "sse_timeout": "SSE data timeout (seconds)"
+          "sse_timeout": "SSE data timeout (seconds)",
+          "publish_interval": "Update frequency"
+        },
+        "data_description": {
+          "publish_interval": "SSE: update as soon as the inverter sends data. Other intervals limit publication, not reception or energy calculation."
         }
       }
     }
@@ -231,11 +273,77 @@
       },
       "sse_last_disconnect": {
         "name": "Last SSE interruption"
+      },
+      "load_energy_daily": {
+        "name": "Daily consumption"
+      },
+      "load_energy_monthly": {
+        "name": "Monthly consumption"
+      },
+      "net_import_energy": {
+        "name": "Net imported energy"
+      },
+      "net_export_energy": {
+        "name": "Net exported energy"
+      },
+      "hourly_net_balance": {
+        "name": "Current hourly net balance"
+      },
+      "net_import_energy_daily": {
+        "name": "Daily net import"
+      },
+      "net_export_energy_daily": {
+        "name": "Daily net export"
+      },
+      "net_import_energy_monthly": {
+        "name": "Monthly net import"
+      },
+      "net_export_energy_monthly": {
+        "name": "Monthly net export"
+      },
+      "grid_flow": {
+        "name": "Grid flow",
+        "state": {
+          "importing": "Importing",
+          "exporting": "Exporting",
+          "idle": "Balanced"
+        }
+      },
+      "battery_flow": {
+        "name": "Battery flow",
+        "state": {
+          "charging": "Charging",
+          "discharging": "Discharging",
+          "idle": "Idle",
+          "not_available": "Battery not available"
+        }
+      },
+      "active_alarms": {
+        "name": "Active alarms"
+      },
+      "sse_diagnostics": {
+        "name": "SSE diagnostics",
+        "state": {
+          "connected": "Connected",
+          "disconnected": "Disconnected"
+        }
       }
     },
     "binary_sensor": {
       "sse_connected": {
         "name": "SSE telemetry connected"
+      },
+      "pv_active": {
+        "name": "PV production active"
+      },
+      "grid_connected": {
+        "name": "Connected to grid"
+      },
+      "alarm_active": {
+        "name": "Alarm active"
+      },
+      "power_reduction": {
+        "name": "Power reduction"
       }
     }
   },
@@ -254,6 +362,16 @@
     },
     "energy": {
       "name": "Ingeteam ISS · Energy"
+    }
+  },
+  "selector": {
+    "publish_interval": {
+      "options": {
+        "5": "Every 5 seconds",
+        "10": "Every 10 seconds",
+        "30": "Every 30 seconds",
+        "sse": "Real time — SSE (inverter cadence)"
+      }
     }
   }
 }

@@ -23,8 +23,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .accounting import ACCOUNTING_KEYS
+from .alarms import ALARM_FIELDS, flow_state
 from .const import ENERGY_PUBLISH_INTERVAL, GROUP_ENERGY, Register
 from .coordinator import IngeteamCoordinator
+from .diagnostics import telemetry_diagnostics
 from .energy import ENERGY_SOURCES
 from .entity import IngeteamEntity
 from .values import scaled_sum
@@ -102,6 +105,15 @@ async def async_setup_entry(
         [
             *(IngeteamSensor(owner, desc) for desc in SENSORS),
             *(IngeteamEnergySensor(owner, key) for key in ENERGY_SOURCES),
+            *(IngeteamCalendarSensor(owner, key) for key in ACCOUNTING_KEYS),
+            IngeteamFlowSensor(owner, "grid_flow", ["importing", "exporting", "idle"]),
+            IngeteamFlowSensor(
+                owner,
+                "battery_flow",
+                ["charging", "discharging", "idle", "not_available"],
+            ),
+            IngeteamAlarmSensor(owner),
+            IngeteamSSEDiagnostics(owner),
             IngeteamTimestampSensor(owner, "sse_last_event", "last_event"),
             IngeteamTimestampSensor(owner, "sse_last_disconnect", "last_disconnect"),
         ]
@@ -214,3 +226,106 @@ class IngeteamTimestampSensor(IngeteamEntity, SensorEntity):
     @property
     def native_value(self) -> datetime | None:
         return getattr(self.coordinator, self._field)
+
+
+class IngeteamCalendarSensor(IngeteamEnergySensor):
+    """Calendar meters reset; settled net meters are persistent lifetime totals."""
+
+    def __init__(self, owner, key):
+        super().__init__(owner, key)
+        self._attr_state_class = (
+            SensorStateClass.MEASUREMENT
+            if key == "hourly_net_balance"
+            else SensorStateClass.TOTAL_INCREASING
+        )
+        if key == "hourly_net_balance":
+            # Signed hourly balance is not a cumulative Energy dashboard input.
+            self._attr_device_class = None
+
+    @callback
+    def _handle_coordinator_update(self):
+        self.async_write_ha_state()
+
+    @property
+    def native_value(self):
+        return round(self.coordinator.accounting.values[self._key], 6)
+
+
+class IngeteamFlowSensor(IngeteamEntity, SensorEntity):
+    _attr_device_class = SensorDeviceClass.ENUM
+
+    def __init__(self, owner, key, options):
+        super().__init__(owner.telemetry, Register(0))
+        self._key = key
+        self._attr_options = options
+        self._attr_unique_id = f"{self._serial}_{key}"
+        self._attr_translation_key = key
+
+    @property
+    def available(self):
+        return self.coordinator.connected and self.native_value is not None
+
+    @property
+    def native_value(self):
+        data = self.coordinator.data or {}
+        if self._key == "grid_flow":
+            return flow_state(data.get("external_grid_power"), "importing", "exporting")
+        if data.get("battery_status") == 7:
+            return "not_available"
+        return flow_state(data.get("battery_power"), "discharging", "charging")
+
+
+class IngeteamAlarmSensor(IngeteamEntity, SensorEntity):
+    _attr_translation_key = "active_alarms"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:alert-circle-outline"
+
+    def __init__(self, owner):
+        super().__init__(owner, Register(0))
+        self._attr_unique_id = f"{self._serial}_active_alarms"
+
+    @property
+    def available(self):
+        return self.coordinator.last_update_success and bool(
+            self.coordinator.raw_alarms
+        )
+
+    @property
+    def native_value(self):
+        return len(self.coordinator.alarms)
+
+    @property
+    def extra_state_attributes(self):
+        return {
+            "alarms": self.coordinator.alarms,
+            "raw_codes": self.coordinator.raw_alarms,
+            "coverage": "device_map",
+            "missing_categories": [
+                category
+                for category in ALARM_FIELDS.values()
+                if category not in self.coordinator.raw_alarms
+            ],
+        }
+
+
+class IngeteamSSEDiagnostics(IngeteamEntity, SensorEntity):
+    _attr_translation_key = "sse_diagnostics"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+    _attr_icon = "mdi:connection"
+
+    def __init__(self, owner):
+        super().__init__(owner.telemetry, Register(0))
+        self._attr_unique_id = f"{self._serial}_sse_diagnostics"
+
+    @property
+    def available(self):
+        return True
+
+    @property
+    def native_value(self):
+        return "connected" if self.coordinator.connected else "disconnected"
+
+    @property
+    def extra_state_attributes(self):
+        return telemetry_diagnostics(self.coordinator)

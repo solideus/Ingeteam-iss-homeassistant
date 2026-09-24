@@ -19,6 +19,9 @@ SSE_PHASE_EVENT = "/ems/sse/phases"
 CONF_DEVICE_ID = "device_id"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_SSE_TIMEOUT = "sse_timeout"
+CONF_PUBLISH_INTERVAL = "publish_interval"
+DEFAULT_PUBLISH_INTERVAL = "sse"
+REFERENCE_FIRMWARE = "ABH1007AE"
 
 PLATFORMS = ["sensor", "binary_sensor", "number", "switch", "select", "time"]
 
@@ -57,6 +60,11 @@ HOLDING_RANGES = (
 # Only telemetry not provided by the selected SSE event. This endpoint returns
 # raw scaled values; /properties/read returns already-decoded values instead.
 ONLINE_RANGES = (
+    {"address": 9, "length": 7},
+    {"address": 26, "length": 4},
+    {"address": 40, "length": 3},
+    {"address": 68, "length": 1},
+    {"address": 73, "length": 5},
     {"address": 18, "length": 1},
     {"address": 33, "length": 4},
 )

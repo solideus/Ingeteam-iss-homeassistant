@@ -98,7 +98,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up writable schedule times."""
-    async_add_entities(IngeteamTime(entry.runtime_data, desc) for desc in TIMES)
+    async_add_entities(
+        IngeteamTime(entry.runtime_data, desc)
+        for desc in TIMES
+        if all(
+            entry.runtime_data.api.supports("holding", desc.register.address, bit)
+            for bit in (0, 8)
+        )
+    )
 
 
 class IngeteamTime(IngeteamEntity, TimeEntity):

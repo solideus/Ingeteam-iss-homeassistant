@@ -9,7 +9,41 @@
           "username": "Nome de utilizador",
           "password": "Palavra-passe",
           "port": "Porta HTTP",
-          "device_id": "ID do inversor"
+          "device_id": "ID do inversor",
+          "publish_interval": "Frequência de atualização"
+        },
+        "data_description": {
+          "publish_interval": "SSE atualiza assim que chegam dados. Os outros intervalos limitam a publicação, não a receção nem o cálculo energético."
+        }
+      },
+      "reconfigure": {
+        "title": "Reconfigurar Ingeteam ISS",
+        "description": "A ligação é verificada antes de guardar. Deixe a palavra-passe vazia para conservar a atual.",
+        "data": {
+          "host": "Endereço IP ou nome do servidor",
+          "username": "Nome de utilizador",
+          "password": "Palavra-passe",
+          "port": "Porta HTTP",
+          "device_id": "ID do inversor",
+          "publish_interval": "Frequência de atualização"
+        },
+        "data_description": {
+          "publish_interval": "SSE atualiza assim que chegam dados. Os outros intervalos limitam a publicação, não a receção nem o cálculo energético."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Renovar credenciais",
+        "description": "A ligação é verificada antes de guardar. Deixe a palavra-passe vazia para conservar a atual.",
+        "data": {
+          "host": "Endereço IP ou nome do servidor",
+          "username": "Nome de utilizador",
+          "password": "Palavra-passe",
+          "port": "Porta HTTP",
+          "device_id": "ID do inversor",
+          "publish_interval": "Frequência de atualização"
+        },
+        "data_description": {
+          "publish_interval": "SSE atualiza assim que chegam dados. Os outros intervalos limitam a publicação, não a receção nem o cálculo energético."
         }
       }
     },
@@ -17,10 +51,14 @@
       "cannot_connect": "Não foi possível ligar ao inversor",
       "invalid_auth": "Nome de utilizador ou palavra-passe incorretos",
       "unknown": "Erro inesperado",
-      "invalid_connection_settings": "O ID deve ser um inteiro de 1 a 247 e a porta de 1 a 65535"
+      "invalid_connection_settings": "O ID deve ser um inteiro de 1 a 247 e a porta de 1 a 65535",
+      "unsupported_device": "Não foram encontrados registos compatíveis para este ID do inversor.",
+      "different_device": "O número de série pertence a outro equipamento. Os históricos não serão misturados."
     },
     "abort": {
-      "already_configured": "Este inversor já está configurado"
+      "already_configured": "Este inversor já está configurado",
+      "reconfigure_successful": "Configuração atualizada.",
+      "reauth_successful": "Credenciais atualizadas."
     }
   },
   "options": {
@@ -29,7 +67,11 @@
         "title": "Opções do Ingeteam ISS",
         "data": {
           "scan_interval": "Intervalo de leitura HTTP (segundos)",
-          "sse_timeout": "Tempo sem dados SSE (segundos)"
+          "sse_timeout": "Tempo sem dados SSE (segundos)",
+          "publish_interval": "Frequência de atualização"
+        },
+        "data_description": {
+          "publish_interval": "SSE atualiza assim que chegam dados. Os outros intervalos limitam a publicação, não a receção nem o cálculo energético."
         }
       }
     }
@@ -153,6 +195,60 @@
       },
       "sse_last_disconnect": {
         "name": "Última interrupção SSE"
+      },
+      "load_energy_daily": {
+        "name": "Consumo diário"
+      },
+      "load_energy_monthly": {
+        "name": "Consumo mensal"
+      },
+      "net_import_energy": {
+        "name": "Energia importada líquida"
+      },
+      "net_export_energy": {
+        "name": "Energia exportada líquida"
+      },
+      "hourly_net_balance": {
+        "name": "Balanço líquido da hora atual"
+      },
+      "net_import_energy_daily": {
+        "name": "Importação líquida diária"
+      },
+      "net_export_energy_daily": {
+        "name": "Exportação líquida diária"
+      },
+      "net_import_energy_monthly": {
+        "name": "Importação líquida mensal"
+      },
+      "net_export_energy_monthly": {
+        "name": "Exportação líquida mensal"
+      },
+      "grid_flow": {
+        "name": "Fluxo da rede",
+        "state": {
+          "importing": "Importação",
+          "exporting": "Exportação",
+          "idle": "Equilibrado"
+        }
+      },
+      "battery_flow": {
+        "name": "Fluxo da bateria",
+        "state": {
+          "charging": "A carregar",
+          "discharging": "A descarregar",
+          "idle": "Repouso",
+          "not_available": "Bateria indisponível"
+        }
+      },
+      "active_alarms": {
+        "name": "Alarmes ativos"
+      },
+      "sse_diagnostics": {
+        "name": "Diagnóstico SSE",
+        "state": {
+          "connected": "Ligado",
+          "disconnected": "Desligado"
+        }
       }
     },
     "select": {
@@ -236,6 +332,18 @@
     "binary_sensor": {
       "sse_connected": {
         "name": "Telemetria SSE ligada"
+      },
+      "pv_active": {
+        "name": "Produção FV ativa"
+      },
+      "grid_connected": {
+        "name": "Ligado à rede"
+      },
+      "alarm_active": {
+        "name": "Alarme ativo"
+      },
+      "power_reduction": {
+        "name": "Redução de potência"
       }
     }
   },
@@ -254,6 +362,16 @@
     },
     "energy": {
       "name": "Ingeteam ISS · Energia"
+    }
+  },
+  "selector": {
+    "publish_interval": {
+      "options": {
+        "5": "A cada 5 segundos",
+        "10": "A cada 10 segundos",
+        "30": "A cada 30 segundos",
+        "sse": "Tempo real — SSE (ritmo do inversor)"
+      }
     }
   }
 }

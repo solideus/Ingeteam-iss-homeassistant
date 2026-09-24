@@ -84,7 +84,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up battery-use selectors."""
-    async_add_entities(IngeteamSelect(entry.runtime_data, desc) for desc in SELECTS)
+    async_add_entities(
+        IngeteamSelect(entry.runtime_data, desc)
+        for desc in SELECTS
+        if entry.runtime_data.api.supports(
+            "holding", desc.register.address, desc.register.startbit
+        )
+    )
 
 
 class IngeteamSelect(IngeteamEntity, SelectEntity):

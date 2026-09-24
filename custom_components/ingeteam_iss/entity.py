@@ -15,7 +15,11 @@ type EntityCoordinator = IngeteamCoordinator | IngeteamTelemetryCoordinator
 def inverter_device_info(coordinator: EntityCoordinator) -> DeviceInfo:
     """Stable parent identity, registered before platform setup starts."""
     info = coordinator.device_info
-    serial = str(info.get("SerialNumber") or coordinator.api.host)
+    serial = str(
+        getattr(coordinator, "identity", None)
+        or info.get("SerialNumber")
+        or coordinator.api.host
+    )
     return DeviceInfo(
         identifiers={(DOMAIN, serial)},
         manufacturer="Ingeteam",
@@ -44,7 +48,11 @@ class IngeteamEntity(CoordinatorEntity[EntityCoordinator]):
         super().__init__(coordinator)
         self.register = register
         info = coordinator.device_info
-        self._serial = str(info.get("SerialNumber") or coordinator.api.host)
+        self._serial = str(
+            getattr(coordinator, "identity", None)
+            or info.get("SerialNumber")
+            or coordinator.api.host
+        )
         parent_identifier = (DOMAIN, self._serial)
         if group is None:
             self._attr_device_info = inverter_device_info(coordinator)
