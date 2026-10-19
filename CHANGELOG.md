@@ -1,5 +1,13 @@
 # Registro de cambios
 
+## 0.5.1
+
+- Resuelve la zona horaria mediante `dt_util.async_get_time_zone` durante el
+  arranque y pasa el objeto `tzinfo` a los coordinadores y contadores energéticos.
+  Evita la lectura bloqueante de archivos de zona horaria en el bucle de eventos.
+- Conserva los cálculos de energía, los periodos locales y los cambios de horario.
+- Añade pruebas de regresión para la resolución asíncrona y el uso de `tzinfo`.
+
 ## 0.5.0
 
 - Frecuencia de publicación: Tiempo real — SSE (predeterminada), 5, 10 o 30 s.

@@ -5,8 +5,7 @@ Only observed, valid intervals are integrated. Restart restores buckets, never
 power/time anchors. Hour identifiers are UTC timestamps (DST-safe).
 """
 
-from datetime import datetime, timezone
-from zoneinfo import ZoneInfo
+from datetime import datetime, timezone, tzinfo
 
 from .const import ENERGY_MAX_GAP
 from .sse import finite_number
@@ -27,8 +26,8 @@ ACCOUNTING_KEYS = (
 class CalendarEnergy:
     """Persistent calendar buckets with a five-second settlement safety margin."""
 
-    def __init__(self, time_zone: str) -> None:
-        self.zone = ZoneInfo(time_zone)
+    def __init__(self, time_zone: tzinfo) -> None:
+        self.zone = time_zone
         self.values = dict.fromkeys(ACCOUNTING_KEYS, 0.0)
         self.day = ""
         self.month = ""
