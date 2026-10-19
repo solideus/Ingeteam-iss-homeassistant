@@ -6,6 +6,7 @@ import asyncio
 import json
 from pathlib import Path
 from types import MappingProxyType
+from unittest.mock import AsyncMock
 
 import pytest
 import pytest_asyncio
@@ -19,6 +20,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import frame
 from homeassistant.helpers.translation import async_get_translations
+from homeassistant.util import dt as dt_util
 
 from custom_components.ingeteam_iss.api import IngeteamApiError
 from custom_components.ingeteam_iss.config_flow import _user_schema
@@ -858,3 +860,20 @@ async def test_sse_http_errors_do_not_disable_controls(system, status, bad_conte
         hass.states.get(entity_id(hass, "number", "bms_max_charge_current")).state
         == "24.0"
     )
+
+
+@pytest.mark.asyncio
+async def test_reload_resolves_time_zone_asynchronously_before_accounting(
+    system, monkeypatch
+):
+    hass, entry, _ = system
+    zone = await dt_util.async_get_time_zone("Europe/Madrid")
+    resolve_zone = AsyncMock(return_value=zone)
+    monkeypatch.setattr(
+        "custom_components.ingeteam_iss.dt_util.async_get_time_zone", resolve_zone
+    )
+    hass.config.time_zone = "Europe/Madrid"
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await wait_until(lambda: entry.runtime_data.telemetry.connected)
+    resolve_zone.assert_awaited_once_with("Europe/Madrid")
+    assert entry.runtime_data.telemetry.accounting.zone is zone

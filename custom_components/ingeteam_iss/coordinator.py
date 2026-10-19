@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import timedelta
+from datetime import timedelta, tzinfo
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -30,6 +30,7 @@ class IngeteamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         scan_interval: int = DEFAULT_SCAN_INTERVAL,
         *,
         config_entry: ConfigEntry,
+        time_zone: tzinfo,
         sse_timeout: int = DEFAULT_SSE_TIMEOUT,
     ) -> None:
         super().__init__(
@@ -46,7 +47,7 @@ class IngeteamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.raw_alarms: dict = {}
         self._alarm_snapshot: dict = {}
         self.telemetry = IngeteamTelemetryCoordinator(
-            hass, api, config_entry=config_entry, timeout=sse_timeout
+            hass, api, config_entry=config_entry, time_zone=time_zone, timeout=sse_timeout
         )
 
     async def _async_update_data(self) -> dict[str, Any]:

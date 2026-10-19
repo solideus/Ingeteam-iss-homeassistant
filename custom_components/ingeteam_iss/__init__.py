@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util import dt as dt_util
 
 from .api import IngeteamApi, IngeteamApiError, IngeteamAuthError
 from .const import (
@@ -36,6 +37,9 @@ type IngeteamConfigEntry = ConfigEntry[IngeteamCoordinator]
 
 async def async_setup_entry(hass: HomeAssistant, entry: IngeteamConfigEntry) -> bool:
     """Set up Ingeteam ISS from a config entry."""
+    time_zone = await dt_util.async_get_time_zone(hass.config.time_zone)
+    if time_zone is None:
+        raise ConfigEntryNotReady("Unable to resolve the configured time zone")
     api = IngeteamApi(
         async_get_clientsession(hass),
         entry.data[CONF_HOST],
@@ -49,6 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IngeteamConfigEntry) -> 
         api,
         entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
         config_entry=entry,
+        time_zone=time_zone,
         sse_timeout=entry.options.get(CONF_SSE_TIMEOUT, DEFAULT_SSE_TIMEOUT),
     )
     coordinator.telemetry.publish_interval = float(

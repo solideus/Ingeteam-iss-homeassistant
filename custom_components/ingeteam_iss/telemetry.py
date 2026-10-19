@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from contextlib import aclosing, suppress
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, tzinfo
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -33,6 +33,7 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         api: IngeteamApi,
         *,
         config_entry: ConfigEntry,
+        time_zone: tzinfo,
         timeout: int = DEFAULT_SSE_TIMEOUT,
     ) -> None:
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}_sse", config_entry=config_entry)
@@ -44,7 +45,7 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.last_event: datetime | None = None
         self.last_disconnect: datetime | None = None
         self.energy = EnergyAccumulator()
-        self.accounting = CalendarEnergy(hass.config.time_zone)
+        self.accounting = CalendarEnergy(time_zone)
         self.publish_interval = 0.0
         self._last_publish = float("-inf")
         self.latest_sample: dict[str, Any] = {}
