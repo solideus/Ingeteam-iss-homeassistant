@@ -1,5 +1,21 @@
 # Registro de cambios
 
+## 0.5.2 — Optimización de sensores de energía
+
+- Los nueve sensores de calendario y balance neto heredan el límite de publicación
+  de energía de 30 s. Se sigue integrando cada muestra SSE válida, con la misma
+  precisión interna, persistencia e identificadores.
+- Los cierres de hora y reinicios de día/mes publican inmediatamente el subtotal
+  final y el cero correspondiente, incluso sin nuevas muestras SSE. Esto evita
+  ocultar energía o reinicios a las estadísticas `total_increasing`.
+- Se conservan el balance horario con signo y `state_class: measurement`, la
+  frecuencia de los sensores de potencia y sus automatizaciones.
+- Menos registros nuevos en Recorder; esta actualización no elimina ni compacta
+  los registros históricos existentes.
+- Se mantiene la resolución asíncrona de zona horaria de 0.5.1 requerida por HACS.
+- Pruebas con reloj simulado para las cuatro frecuencias SSE, cierres de período,
+  ambos cambios de horario de Madrid, desconexión, restauración y estadísticas.
+
 ## 0.5.1
 
 - Resuelve la zona horaria mediante `dt_util.async_get_time_zone` durante el

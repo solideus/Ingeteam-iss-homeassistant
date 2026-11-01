@@ -1,4 +1,4 @@
-# Telemetría SSE y modelo energético — 0.4.0
+# Telemetría SSE y modelo energético
 
 Esta especificación sustituye las hipótesis preliminares por las capturas reales
 aportadas durante el desarrollo. Los nombres de MQTT no se reutilizan como
@@ -115,6 +115,36 @@ No se ofrecen funciones de reinicio, importación de historial ni compensaciones
 manuales en esta versión. Los valores se conservan aunque el sensor de potencia
 quede no disponible. Por ello un total inmóvil no garantiza conexión:
 para automatizaciones de disponibilidad se usa el diagnóstico SSE.
+
+## Publicación de los sensores de calendario desde 0.5.2
+
+Los nueve sensores de `ACCOUNTING_KEYS` usan el límite heredado de energía:
+aproximadamente 30 s entre publicaciones mientras llegan muestras. El intervalo
+puede alargarse hasta la siguiente notificación del coordinador. Las excepciones
+son los cierres de hora, reinicios de día/mes y la interrupción SSE. El temporizador
+existente de cinco segundos cierra períodos sin inventar muestras ni energía;
+los cierres pendientes pueden esperar su margen de seguridad de cinco segundos.
+
+Se conserva el subtotal final antes de cada reinicio y se publica un cero explícito.
+Así, `total_increasing` no pierde el último tramo ni confunde dos subtotales
+parecidos como si fueran un único período. Los seis contadores de balance neto
+publican también el cierre horario. Estos avisos solo llegan a los sensores de
+calendario; no adelantan las notificaciones de potencia ni alteran las integrales.
+
+`hourly_net_balance` sigue siendo exportación menos importación, en kWh, con
+`state_class: measurement` y sin `device_class: energy`. Sus estadísticas de
+mínimo, máximo y media reflejan la menor resolución de publicación; el cálculo
+interno del saldo sigue usando cada muestra. Los demás sensores de calendario
+mantienen `total_increasing`. Identificadores, unidades y redondeo de seis
+decimales al publicar no cambian; no se redondean incrementos internos.
+
+Con valores cambiantes a 1 Hz, 600 publicaciones en diez minutos pasan a unas
+20 por sensor (reducción del 96,7 %), más los avisos de cierre o desconexión.
+La reducción real de filas depende de la frecuencia SSE, de si cambia el valor
+y de los filtros de Recorder. No es una reducción del 96,7 % de toda la base de
+datos. La actualización tampoco elimina datos históricos ya almacenados.
+
+Consulta [la validación de 0.5.2](VERSION_0.5.2.md).
 
 ## Referencias
 

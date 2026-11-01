@@ -1,10 +1,10 @@
-# Ingeteam ISS for Home Assistant — 0.5.0
+# Ingeteam ISS for Home Assistant — 0.5.2
 
 [Español](README.es.md) · [Testing](docs/VALIDATION.md) · [Telemetry and energy](docs/TELEMETRY_ENERGY.md) · [Publishing](docs/PUBLISHING.md)
 
 Unofficial local integration for the Ingeteam INGECON SUN STORAGE ISS 6TL.
-Version 0.5.0 retains the working controls, schedules, groups and entity identities
-from 0.4.0, adding hourly net energy, calendar consumption and reconfiguration.
+Version 0.5.2 reduces Recorder traffic from calendar energy sensors while retaining
+controls, schedules, identities, hourly netting and full internal energy precision.
 No cloud, MQTT broker or Node-RED is required. Setup never writes inverter settings.
 
 ## Requirements
@@ -114,6 +114,12 @@ grid remain usable. Battery settings remain accessible if their HTTP reads are
 valid. SOC=0 or power=0 alone does not indicate disconnection.
 
 ## Calculated energy
+
+**0.5.2:** Calendar and net energy sensors now use the same 30-second publication
+limit as lifetime energy counters. Period boundaries publish final subtotals and
+resets immediately so statistics retain the complete observed energy. Power
+sensor timing and the SSE connection are unchanged. Existing Recorder history
+is not deleted or compacted. See [details and validation](docs/VERSION_0.5.2.md).
 
 Six counters integrate PV, household load, grid import/export and battery
 charge/discharge. They use the **left Riemann rule**, matching the former YAML
