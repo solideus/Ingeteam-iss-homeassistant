@@ -233,6 +233,7 @@ class IngeteamCalendarSensor(IngeteamEnergySensor):
 
     def __init__(self, owner, key):
         super().__init__(owner, key)
+        self._period_value: float | None = None
         self._attr_state_class = (
             SensorStateClass.MEASUREMENT
             if key == "hourly_net_balance"
@@ -242,12 +243,28 @@ class IngeteamCalendarSensor(IngeteamEnergySensor):
             # Signed hourly balance is not a cumulative Energy dashboard input.
             self._attr_device_class = None
 
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.async_add_calendar_listener(
+                self._key, self._handle_period_update
+            )
+        )
+
     @callback
-    def _handle_coordinator_update(self):
-        self.async_write_ha_state()
+    def _handle_period_update(self, value: float) -> None:
+        """Publish final/reset values even inside the inherited 30-second gate."""
+        self._period_value = value
+        self._last_publish = self.coordinator.hass.loop.time()
+        try:
+            self.async_write_ha_state()
+        finally:
+            self._period_value = None
 
     @property
     def native_value(self):
+        if self._period_value is not None:
+            return round(self._period_value, 6)
         return round(self.coordinator.accounting.values[self._key], 6)
 
 

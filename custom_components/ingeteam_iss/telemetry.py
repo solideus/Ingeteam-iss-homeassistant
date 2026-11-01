@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Callable
 from contextlib import aclosing, suppress
 from datetime import datetime, timedelta, tzinfo
 from typing import Any
@@ -46,6 +47,7 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.last_disconnect: datetime | None = None
         self.energy = EnergyAccumulator()
         self.accounting = CalendarEnergy(time_zone)
+        self._calendar_listeners: dict[str, list[Callable[[float], None]]] = {}
         self.publish_interval = 0.0
         self._last_publish = float("-inf")
         self.latest_sample: dict[str, Any] = {}
@@ -78,6 +80,27 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if isinstance(saved.get("calendar"), dict):
                 self.accounting.restore(saved["calendar"])
         self.accounting.tick(dt_util.utcnow().timestamp())
+        self._publish_calendar_periods()
+
+    @callback
+    def async_add_calendar_listener(
+        self, key: str, listener: Callable[[float], None]
+    ) -> Callable[[], None]:
+        """Listen for a meter's period boundaries independently of power updates."""
+        listeners = self._calendar_listeners.setdefault(key, [])
+        listeners.append(listener)
+        return lambda: listeners.remove(listener)
+
+    @callback
+    def _publish_calendar_periods(self) -> None:
+        # Accounting is complete before notifying entities. Publishing cannot
+        # interrupt a calculation, and snapshots retain pre-reset subtotals.
+        for key, value in self.accounting.take_period_updates():
+            for listener in tuple(self._calendar_listeners.get(key, ())):
+                try:
+                    listener(value)
+                except Exception:
+                    _LOGGER.exception("Error publishing calendar meter %s", key)
 
     @callback
     def _stored_data(self) -> dict:
@@ -93,6 +116,7 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @callback
     def _tick(self, now) -> None:
         self.accounting.tick(now.timestamp())
+        self._publish_calendar_periods()
         self._schedule_save()
         # Diagnostics and calendar resets also refresh when SSE is unavailable.
         if not self.connected:
@@ -131,6 +155,7 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         mono = self.hass.loop.time()
         self.energy.update(sample, mono)
         self.accounting.update(sample, mono, now.timestamp())
+        self._publish_calendar_periods()
         self._schedule_save()
         if self.last_event is not None and self.connected:
             interval = (now - self.last_event).total_seconds()

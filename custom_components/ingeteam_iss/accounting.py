@@ -35,6 +35,19 @@ class CalendarEnergy:
         self.imported = 0.0
         self.exported = 0.0
         self._previous = None
+        self._period_updates: list[tuple[str, float]] = []
+
+    def take_period_updates(self) -> list[tuple[str, float]]:
+        """Drain ordered publication snapshots without changing any accumulator."""
+        updates, self._period_updates = self._period_updates, []
+        return updates
+
+    def _reset(self, key: str) -> None:
+        # Recorder must see the final subtotal and an explicit zero. Otherwise
+        # throttling can hide the end of a period or even hide a small reset.
+        self._period_updates.append((key, self.values[key]))
+        self.values[key] = 0.0
+        self._period_updates.append((key, 0.0))
 
     def dump(self) -> dict:
         return {
@@ -47,6 +60,7 @@ class CalendarEnergy:
         }
 
     def restore(self, saved: dict) -> None:
+        self._period_updates.clear()
         for key in self.values:
             if key != "hourly_net_balance":
                 value = finite_number(saved.get("values", {}).get(key), minimum=0)
@@ -70,12 +84,12 @@ class CalendarEnergy:
         if day != self.day:
             for key in self.values:
                 if key.endswith("_daily"):
-                    self.values[key] = 0.0
+                    self._reset(key)
             self.day = day
         if month != self.month:
             for key in self.values:
                 if key.endswith("_monthly"):
-                    self.values[key] = 0.0
+                    self._reset(key)
             self.month = month
 
     def _settle(self) -> None:
@@ -89,9 +103,12 @@ class CalendarEnergy:
             ("export", max(-balance, 0)),
         ):
             for suffix in ("", "_daily", "_monthly"):
-                self.values[f"net_{direction}_energy{suffix}"] += amount
+                key = f"net_{direction}_energy{suffix}"
+                self.values[key] += amount
+                self._period_updates.append((key, self.values[key]))
+        self.values["hourly_net_balance"] = self.exported - self.imported
+        self._reset("hourly_net_balance")
         self.imported = self.exported = 0.0
-        self.values["hourly_net_balance"] = 0.0
 
     def _hour(self, timestamp: float) -> bool:
         hour = int(timestamp // 3600) * 3600

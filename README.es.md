@@ -1,11 +1,12 @@
-# Ingeteam ISS para Home Assistant — 0.5.0
+# Ingeteam ISS para Home Assistant — 0.5.2
 
 [English](README.md) · [Instalación y pruebas](docs/VALIDATION.md) · [Telemetría y energía](docs/TELEMETRY_ENERGY.md) · [Publicación](docs/PUBLISHING.md)
 
 Integración local **no oficial** para el Ingeteam INGECON SUN STORAGE ISS 6TL.
-Esta versión conserva los controles, horarios, grupos, identificadores e icono de
-la 0.4.0 y añade balance neto horario, consumo diario/mensual y reconfiguración. No necesita Node-RED,
-MQTT ni servicios en la nube. No escribe parámetros durante la instalación.
+La versión 0.5.2 reduce las escrituras de los sensores de energía de calendario
+en Recorder, conservando controles, horarios, grupos, identificadores, balance
+neto y precisión energética. No necesita Node-RED, MQTT ni servicios en la nube.
+No escribe parámetros durante la instalación.
 
 ## Requisitos y acceso
 
@@ -117,6 +118,13 @@ Los ajustes almacenados de batería siguen accesibles si su lectura HTTP es
 válida. Un SOC de 0 % por sí solo no significa batería desconectada.
 
 ## Energía
+
+**0.5.2:** Los sensores de calendario y balance neto aplican el mismo límite de
+publicación de 30 s que los contadores de energía de vida útil. Los cierres de
+período publican inmediatamente el subtotal final y su reinicio, para conservar
+la energía observada en las estadísticas. La recepción SSE y las potencias
+mantienen su frecuencia. No se borran ni compactan los históricos existentes de
+Recorder. Consulta [el detalle y la validación](docs/VERSION_0.5.2.md).
 
 Los contadores integran potencia con la regla izquierda, como el
 `method: left` de tu YAML, usando el tiempo real entre recepciones. El cálculo
