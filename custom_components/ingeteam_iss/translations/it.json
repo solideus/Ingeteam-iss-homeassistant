@@ -51,7 +51,7 @@
       "cannot_connect": "Impossibile connettersi all’inverter",
       "invalid_auth": "Nome utente o password errati",
       "unknown": "Errore imprevisto",
-      "invalid_connection_settings": "L’ID deve essere un intero da 1 a 247 e la porta da 1 a 65535",
+      "invalid_connection_settings": "Impostazioni di connessione non valide. L’ID deve essere un intero da 1 a 247 e la porta da 1 a 65535. Il nome utente non può contenere ':'. Nome utente e password devono usare caratteri Latin-1.",
       "unsupported_device": "Nessun registro compatibile trovato per questo ID inverter.",
       "different_device": "Il numero di serie appartiene a un altro dispositivo. Le cronologie non saranno unite."
     },

@@ -51,7 +51,7 @@
       "cannot_connect": "Could not connect to the inverter",
       "invalid_auth": "Invalid username or password",
       "unknown": "Unexpected error",
-      "invalid_connection_settings": "The ID must be an integer from 1 to 247 and the port from 1 to 65535",
+      "invalid_connection_settings": "Invalid connection settings. The ID must be an integer from 1 to 247 and the port from 1 to 65535. The username cannot contain ':'. The username and password must use Latin-1 characters.",
       "unsupported_device": "No compatible registers found for this inverter ID.",
       "different_device": "The serial number belongs to a different device. Its history cannot be mixed."
     },

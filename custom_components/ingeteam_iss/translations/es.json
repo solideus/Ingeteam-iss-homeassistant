@@ -51,7 +51,7 @@
       "cannot_connect": "No se pudo conectar con el inversor",
       "invalid_auth": "Usuario o contraseña incorrectos",
       "unknown": "Error inesperado",
-      "invalid_connection_settings": "El ID debe ser un entero entre 1 y 247 y el puerto entre 1 y 65535",
+      "invalid_connection_settings": "Configuración de conexión no válida. El ID debe ser un entero entre 1 y 247 y el puerto entre 1 y 65535. El usuario no puede contener ':'. El usuario y la contraseña deben utilizar caracteres Latin-1.",
       "unsupported_device": "No se encontraron registros compatibles para este ID.",
       "different_device": "El número de serie corresponde a otro equipo. No se mezclarán sus históricos."
     },

@@ -23,7 +23,7 @@ def sample(imp=0, exp=0, load=3600):
 
 def test_netting_closes_hour_once_and_never_resets_lifetime():
     acc = CalendarEnergy(ZoneInfo("Europe/Madrid"))
-    start = timestamp("2026-09-24T10:00:00")
+    start = timestamp("2026-09-24T09:59:55")
     for second in range(3601):
         acc.update(
             sample(3600 if second < 1800 else 0, 0 if second < 1800 else 1800),
@@ -49,13 +49,13 @@ def test_midnight_month_split_and_restart():
     acc.update(sample(3600), 4, start + 4)
     assert acc.values["load_energy_daily"] == pytest.approx(0.002)
     assert acc.values["load_energy_monthly"] == pytest.approx(0.002)
-    assert acc.values["net_import_energy"] == pytest.approx(0.002)
+    assert acc.values["net_import_energy"] == 0
     restored = CalendarEnergy(ZoneInfo("Europe/Madrid"))
     restored.restore(acc.dump())
     restored.update(sample(3600), 0, start + 100)
-    assert restored.imported == pytest.approx(0.002)
+    assert restored.imported == pytest.approx(0.004)
     restored.update(sample(3600), 1, start + 101)
-    assert restored.imported == pytest.approx(0.003)
+    assert restored.imported == pytest.approx(0.005)
     restored.tick(start + 3610)
     assert restored.values["net_import_energy"] == pytest.approx(0.005)
     again = CalendarEnergy(ZoneInfo("Europe/Madrid"))
@@ -64,7 +64,7 @@ def test_midnight_month_split_and_restart():
     assert again.values["net_import_energy"] == pytest.approx(0.005)
 
 
-@pytest.mark.parametrize("start", ["2026-03-29T00:59:58", "2026-10-25T00:59:58"])
+@pytest.mark.parametrize("start", ["2026-03-29T00:59:53", "2026-10-25T00:59:53"])
 def test_dst_hour_identifiers_are_unambiguous(start):
     acc = CalendarEnergy(ZoneInfo("Europe/Madrid"))
     stamp = timestamp(start)
@@ -86,13 +86,13 @@ def test_no_energy_across_gap_invalid_data_or_clock_jump():
     assert acc.imported == 0
 
 
-def test_idle_settlement_safety_margin_and_unknown_alarms():
+def test_idle_settlement_precedes_hour_end_and_unknown_alarms():
     acc = CalendarEnergy(timezone.utc)
-    acc.update(sample(3600), 0, 3597)
-    acc.update(sample(3600), 1, 3598)
-    acc.tick(3604)
+    acc.update(sample(3600), 0, 3592)
+    acc.update(sample(3600), 1, 3593)
+    acc.tick(3594)
     assert acc.values["net_import_energy"] == 0
-    acc.tick(3605)
+    acc.tick(3595)
     assert acc.values["net_import_energy"] == pytest.approx(0.001)
     alarms, raw = decode_alarms({(73, 0): 5, (10, 0): 0}, {}, "es")
     assert len(alarms) == 2

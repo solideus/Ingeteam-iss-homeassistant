@@ -1,11 +1,28 @@
-# Ingeteam ISS for Home Assistant — 0.5.2
+# Ingeteam ISS for Home Assistant — 0.5.3
 
 [Español](README.es.md) · [Testing](docs/VALIDATION.md) · [Telemetry and energy](docs/TELEMETRY_ENERGY.md) · [Publishing](docs/PUBLISHING.md)
 
 Unofficial local integration for the Ingeteam INGECON SUN STORAGE ISS 6TL.
-Version 0.5.2 reduces Recorder traffic from calendar energy sensors while retaining
-controls, schedules, identities, hourly netting and full internal energy precision.
+Version 0.5.3 fixes hourly Energy dashboard attribution, restores pending calendar
+closures and hardens alarm coverage, register readings and initial configuration.
 No cloud, MQTT broker or Node-RED is required. Setup never writes inverter settings.
+
+## Corrections in 0.5.3
+
+- Hourly net counters close at **HH:59:55**, with immediate publication inside
+  the closing statistics hour. The final five seconds feed the next 60-minute
+  net window; valid in-flight intervals are retained.
+- Restored calendar subtotals are exposed before pending settlements and resets,
+  preserving observed energy in daily/monthly counter histories.
+- Partial alarm reads retain known active codes with explicit stale/coverage
+  attributes. Incomplete zero readings do not confirm an all-clear state.
+- Invalid register values and incomplete HTTP/maps leave affected entities
+  unavailable while valid controls continue updating.
+- Initial credential validation returns a form error with translated guidance.
+- Real Recorder/SQLite hourly statistics tests and four original SSE captures.
+
+See [0.5.3 upgrade and validation](docs/VERSION_0.5.3.md). Existing statistics
+are not shifted retroactively; physical testing on the inverter remains needed.
 
 ## Requirements
 
@@ -184,10 +201,9 @@ Supported scope is one ISS inverter per communication board; aggregate SSE is
 not per-node telemetry for multi-inverter installations. Existing board-serial
 identity is preserved.
 
-The source tree uses the HACS integration layout and includes automated tests,
-issue templates, HACS/Hassfest validation and publication instructions. Until a
-tagged release is created, install this development version by adding this
-repository to HACS as a custom repository of type **Integration**. Official
+The integration is included in the HACS default catalogue. Search for **Ingeteam
+ISS** in HACS, install it, restart Home Assistant and add the integration. The
+source tree includes automated tests and HACS/Hassfest validation. Official
 Home Assistant Core inclusion will be a separate review, not an automatic
 consequence of reaching version 1.0.
 

@@ -1,4 +1,8 @@
-# Validación y prueba de instalación — 0.4.0
+# Validación y prueba de instalación
+
+Para las correcciones y pruebas de la versión actual, consulta
+[la validación de 0.5.3](VERSION_0.5.3.md). Los resultados siguientes documentan
+la validación histórica de 0.4.0.
 
 ## Comprobación automatizada
 
@@ -26,7 +30,8 @@ Cobertura:
 - Ocho traducciones cargadas mediante Home Assistant.
 - Eventos fragmentados, UTF-8, BOM, varios finales de línea, comentarios,
   JSON inválido, tamaños excesivos y selección inequívoca de Phase 4.
-- Las cinco capturas reales de operación aportadas por el usuario.
+- Cinco escenarios sintéticos de operación. Desde 0.5.3 se añaden cuatro
+  capturas originales completas en `tests/fixtures/real_sse_captures.json`.
 - Cierre SSE, reconexión, errores HTTP/autenticación SSE y silencio con
   heartbeats que no cuentan como datos.
 - SSE y HTTP con disponibilidad independiente; el SSE no reinicia el sondeo HTTP.

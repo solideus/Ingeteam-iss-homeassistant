@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import GROUP_GRID_CHARGE, GROUP_SCHEDULED_DISCHARGE, Register
 from .coordinator import IngeteamCoordinator
 from .entity import IngeteamEntity
+from .values import register_integer
 
 BATTERY_USE_OPTIONS = ("self_consumption", "grid_injection")
 SCHEDULE_MODE_OPTIONS = ("off", "whole_week", "weekdays", "weekend")
@@ -106,15 +107,18 @@ class IngeteamSelect(IngeteamEntity, SelectEntity):
         self._attr_unique_id = f"{self._serial}_{description.key}"
 
     @property
+    def available(self) -> bool:
+        return super().available and self.current_option is not None
+
+    @property
     def current_option(self) -> str | None:
         """Return the confirmed selection."""
-        value = self._register_value()
+        value = register_integer(
+            self._register_value(), 0, len(self.entity_description.options) - 1
+        )
         if value is None:
             return None
-        try:
-            return self.entity_description.options[int(value)]
-        except IndexError, TypeError, ValueError:
-            return None
+        return self.entity_description.options[value]
 
     async def async_select_option(self, option: str) -> None:
         """Write the selected battery-use mode."""

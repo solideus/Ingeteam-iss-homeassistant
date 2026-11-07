@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import GROUP_BATTERY, GROUP_GRID_EXPORT, Register
 from .coordinator import IngeteamCoordinator
 from .entity import IngeteamEntity
+from .values import register_integer
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -77,9 +78,13 @@ class IngeteamSwitch(IngeteamEntity, SwitchEntity):
         self._attr_unique_id = f"{self._serial}_{description.key}"
 
     @property
+    def available(self) -> bool:
+        return super().available and self.is_on is not None
+
+    @property
     def is_on(self) -> bool | None:
         """Return the confirmed bit value."""
-        value = self._register_value()
+        value = register_integer(self._register_value(), 0, 1)
         return bool(value) if value is not None else None
 
     async def async_turn_on(self, **kwargs) -> None:

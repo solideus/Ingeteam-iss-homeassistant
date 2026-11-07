@@ -51,7 +51,7 @@
       "cannot_connect": "Connexion à l’onduleur impossible",
       "invalid_auth": "Nom d’utilisateur ou mot de passe incorrect",
       "unknown": "Erreur inattendue",
-      "invalid_connection_settings": "L’identifiant doit être un entier de 1 à 247 et le port de 1 à 65535",
+      "invalid_connection_settings": "Paramètres de connexion invalides. L’identifiant doit être un entier de 1 à 247 et le port de 1 à 65535. Le nom d’utilisateur ne peut pas contenir « : ». Le nom d’utilisateur et le mot de passe doivent utiliser des caractères Latin-1.",
       "unsupported_device": "Aucun registre compatible trouvé pour cet identifiant d’onduleur.",
       "different_device": "Le numéro de série correspond à un autre appareil. Les historiques ne seront pas mélangés."
     },

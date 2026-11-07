@@ -50,7 +50,7 @@ async def emit(system, payload):
 
 
 @pytest_asyncio.fixture
-async def system(tmp_path, monkeypatch):
+async def system(tmp_path, monkeypatch, request):
     (tmp_path / "custom_components").symlink_to(
         ROOT / "custom_components", target_is_directory=True
     )
@@ -208,6 +208,21 @@ async def system(tmp_path, monkeypatch):
     await er.async_load(hass)
     hass.config_entries = ConfigEntries(hass, {})
     await hass.config_entries.async_initialize()
+    if getattr(request, "param", None) == "recorder":
+        from homeassistant.helpers import recorder as recorder_helper
+        from homeassistant.setup import async_setup_component
+
+        recorder_helper.async_initialize_recorder(hass)
+        assert await async_setup_component(
+            hass,
+            "recorder",
+            {
+                "recorder": {
+                    "db_url": f"sqlite:///{tmp_path}/statistics.db",
+                    "auto_purge": False,
+                }
+            },
+        )
     entry = ConfigEntry(
         domain=DOMAIN,
         version=1,
@@ -248,6 +263,34 @@ async def system(tmp_path, monkeypatch):
 
 def entity_id(hass, domain, key):
     return er.async_get(hass).async_get_entity_id(domain, DOMAIN, f"TEST-ISS_{key}")
+
+
+@pytest.mark.parametrize(
+    "credentials",
+    [
+        {"username": "invalid:user", "password": "test-password"},
+        {"username": "tester", "password": "password\u20ac"},
+    ],
+    ids=["colon-in-username", "non-latin1-password"],
+)
+async def test_user_flow_invalid_credentials_can_be_corrected(system, credentials):
+    hass, entry, _ = system
+    candidate = {
+        key: entry.data[key]
+        for key in ("host", "port", "device_id", "username", "password")
+    }
+    flow = await hass.config_entries.flow.async_init(DOMAIN, context={"source": "user"})
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"], {**candidate, **credentials}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_connection_settings"}
+
+    # Corrected credentials reach device validation in the same flow.
+    result = await hass.config_entries.flow.async_configure(flow["flow_id"], candidate)
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.asyncio
@@ -452,7 +495,7 @@ async def test_concurrent_writes_each_get_confirmed(system):
 
 
 @pytest.mark.parametrize("name", SCENARIOS)
-async def test_real_captures_in_core(system, name):
+async def test_synthetic_operating_scenarios_in_core(system, name):
     hass, entry, data = system
     await emit(system, SCENARIOS[name])
     phase = SCENARIOS[name]["Phases"][0]

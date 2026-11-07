@@ -137,16 +137,17 @@ async def test_final_subtotal_and_zero_are_published_at_period_boundaries(
     assert sse.accounting.values["load_energy_monthly"] == pytest.approx(
         0.002 if month else 0.004
     )
-    assert sse.accounting.values["net_import_energy"] == pytest.approx(0.001)
-    assert sse.accounting.values["hourly_net_balance"] == pytest.approx(-0.001)
+    # These samples are after :59:55, so both belong to the next net window.
+    assert sse.accounting.values["net_import_energy"] == 0
+    assert sse.accounting.values["hourly_net_balance"] == pytest.approx(-0.002)
     for key, reset in [("load_energy_daily", day), ("load_energy_monthly", month)]:
         assert publications[key] == ([(4, 0.002), (4, 0.0)] if reset else [])
         if reset:
             assert hass.states.get(entity_id(hass, "sensor", key)).state == "0.0"
-    assert publications["hourly_net_balance"] == [(4, -0.001), (4, 0.0)]
+    assert publications["hourly_net_balance"] == []
     assert (
         float(hass.states.get(entity_id(hass, "sensor", "net_import_energy")).state)
-        == 0.001
+        == 0
     )
 
 
@@ -155,7 +156,7 @@ async def test_idle_midnight_settlement_publishes_without_refreshing_power(
     controlled, monkeypatch, connected
 ):
     hass, _, sse = controlled
-    clock = Clock(hass, "2026-12-31T22:59:56")
+    clock = Clock(hass, "2026-12-31T22:59:51")
     publications = capture_publications(monkeypatch, clock)
     power_updates = Mock()
     with clock.patch(monkeypatch, hass):
@@ -166,7 +167,7 @@ async def test_idle_midnight_settlement_publishes_without_refreshing_power(
             sse.async_mark_disconnected()
         publications.clear()
         remove = sse.async_add_listener(power_updates)
-        clock.second = 9  # Safety margin elapsed; no more SSE samples.
+        clock.second = 9  # Midnight; the observed previous window is closed.
         sse._tick(clock.now())
         snapshot = sse.accounting.dump()
         clock.second = 14
@@ -217,7 +218,7 @@ async def test_recorded_states_keep_final_energy_even_when_reset_is_small(
 
 async def test_hourly_netting_import_and_export_settles_once(controlled, monkeypatch):
     hass, _, sse = controlled
-    clock = Clock(hass, "2026-09-24T10:00:00")
+    clock = Clock(hass, "2026-09-24T09:59:55")
     with clock.patch(monkeypatch, hass):
         for second in range(7201):
             clock.second = second
@@ -315,7 +316,7 @@ async def test_midnight_timer_and_sse_order_preserve_recorded_subtotals(
         )
         assert total == pytest.approx(0.002)
         assert sse.accounting.values[key] == pytest.approx(0.001)
-    assert sse.accounting.values["net_import_energy"] == pytest.approx(0.0005)
+    assert sse.accounting.values["net_import_energy"] == 0
 
 
 async def test_publication_failure_cannot_interrupt_accounting(controlled, monkeypatch):
@@ -329,7 +330,7 @@ async def test_publication_failure_cannot_interrupt_accounting(controlled, monke
         sse.async_receive(reading())
         remove()
         assert sse.accounting.values["load_energy_daily"] == pytest.approx(0.001)
-        assert sse.accounting.values["net_import_energy"] == pytest.approx(0.0005)
+        assert sse.accounting.values["net_import_energy"] == 0
         assert sse.accounting.take_period_updates() == []
         assert sse.valid_frames == 2
     assert broken.call_count == 2

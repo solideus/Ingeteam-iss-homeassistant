@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from base64 import b64encode
-from collections.abc import AsyncIterator, Iterable
+from collections.abc import AsyncIterator
 from typing import Any
 
 from aiohttp import (
@@ -21,7 +21,7 @@ from .const import (
     ONLINE_RANGES,
     SSE_PATH,
 )
-from .sse import SSEEvent, iter_sse
+from .sse import SSEEvent, finite_number, iter_sse
 from .values import bounded_integer
 
 
@@ -232,9 +232,11 @@ class IngeteamApi:
     ) -> dict[tuple[int, int], Any]:
         """Flatten the Data/range structure returned by the inverter."""
         values: dict[tuple[int, int], Any] = {}
-        blocks: Iterable[Any] = response.get("Data", [])
+        blocks = response.get("Data")
+        if not isinstance(blocks, list):
+            raise IngeteamApiError("Invalid register response: Data must be a list")
         for block in blocks:
-            if not isinstance(block, dict):
+            if not isinstance(block, dict) or not isinstance(block.get("data"), list):
                 continue
             for item in block.get("data", []):
                 if not isinstance(item, dict) or "address" not in item:
@@ -245,6 +247,14 @@ class IngeteamApi:
                     or "value" not in item
                 ):
                     continue
-                key = (int(item["address"]), int(item.get("startbit", 0)))
+                try:
+                    key = (
+                        bounded_integer(item["address"], 0, 65535),
+                        bounded_integer(item.get("startbit", 0), 0, 31),
+                    )
+                except ValueError:
+                    continue
+                if finite_number(item["value"]) is None:
+                    continue
                 values[key] = item["value"]
         return values

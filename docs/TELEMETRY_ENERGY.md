@@ -55,7 +55,9 @@ internos como entidades adicionales.
 | Batería y FV para vivienda | 1667 | 4048 | 21 | 0 | 0 | 2275 |
 | Sin FV y batería desconectada | 0 | 1015 | 1015 | 0 | No disponible | No disponible |
 
-Potencias en W. Los JSON completos están en `tests/fixtures/scenarios.json`.
+Potencias en W. Cuatro capturas originales completas están en
+`tests/fixtures/real_sse_captures.json`. `tests/fixtures/scenarios.json` contiene
+cinco escenarios sintéticos simplificados; no son copias de esas capturas.
 
 Conclusiones que las pruebas protegen:
 
@@ -116,6 +118,20 @@ manuales en esta versión. Los valores se conservan aunque el sensor de potencia
 quede no disponible. Por ello un total inmóvil no garantiza conexión:
 para automatizaciones de disponibilidad se usa el diagnóstico SSE.
 
+## Cierre del balance desde 0.5.3
+
+El cierre neto horario se adelanta a **HH:59:55**, con un temporizador dedicado y
+publicación inmediata. Los últimos cinco segundos y los intervalos válidos que
+lleguen después de cerrar alimentan el siguiente balance. Se conserva toda la
+energía observada dentro de los intervalos válidos, sin reabrir saldos publicados.
+Los días/meses de consumo mantienen sus límites de calendario local reales.
+
+Al restaurar, las entidades publican los subtotales guardados antes de procesar
+cierres pendientes y ceros de reinicio. Se conservan esos incrementos en el
+historial; su fecha es la del reinicio, sin reconstrucción retroactiva de la hora.
+
+Consulta [las reglas y pruebas de Recorder de 0.5.3](VERSION_0.5.3.md).
+
 ## Publicación de los sensores de calendario desde 0.5.2
 
 Los nueve sensores de `ACCOUNTING_KEYS` usan el límite heredado de energía:
@@ -123,7 +139,8 @@ aproximadamente 30 s entre publicaciones mientras llegan muestras. El intervalo
 puede alargarse hasta la siguiente notificación del coordinador. Las excepciones
 son los cierres de hora, reinicios de día/mes y la interrupción SSE. El temporizador
 existente de cinco segundos cierra períodos sin inventar muestras ni energía;
-los cierres pendientes pueden esperar su margen de seguridad de cinco segundos.
+en 0.5.0–0.5.2 los cierres pendientes esperaban cinco segundos después del cambio
+de hora. Ese comportamiento se sustituye por el cierre anticipado de 0.5.3.
 
 Se conserva el subtotal final antes de cada reinicio y se publica un cero explícito.
 Así, `total_increasing` no pierde el último tramo ni confunde dos subtotales

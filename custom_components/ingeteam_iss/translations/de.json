@@ -51,7 +51,7 @@
       "cannot_connect": "Verbindung zum Wechselrichter fehlgeschlagen",
       "invalid_auth": "Benutzername oder Passwort falsch",
       "unknown": "Unerwarteter Fehler",
-      "invalid_connection_settings": "Die ID muss eine ganze Zahl von 1 bis 247 und der Port von 1 bis 65535 sein",
+      "invalid_connection_settings": "Ungültige Verbindungseinstellungen. Die ID muss eine ganze Zahl von 1 bis 247 und der Port von 1 bis 65535 sein. Der Benutzername darf keinen Doppelpunkt enthalten. Benutzername und Passwort müssen Latin-1-Zeichen verwenden.",
       "unsupported_device": "Keine unterstützten Register für diese Wechselrichter-ID gefunden.",
       "different_device": "Die Seriennummer gehört zu einem anderen Gerät. Historien werden nicht vermischt."
     },
