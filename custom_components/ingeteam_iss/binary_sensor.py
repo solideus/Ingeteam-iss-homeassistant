@@ -85,8 +85,18 @@ class IngeteamOperatingState(IngeteamEntity, BinarySensorEntity):
             status = data.get("inverter_status")
             return True if status in (3, 4, 8) else False if status in (2, 11) else None
         if self._key == "alarm_active":
-            if not self.coordinator.raw_alarms:
-                return None
-            return bool(self.coordinator.alarms)
+            if self.coordinator.alarms:
+                return True
+            return False if self.coordinator.alarm_coverage_complete else None
         reason = raw_integer(data.get("online", {}).get((41, 0)))
         return reason != 0 if reason is not None else None
+
+    @property
+    def extra_state_attributes(self):
+        if self._key != "alarm_active":
+            return None
+        return {
+            "coverage_complete": self.coordinator.alarm_coverage_complete,
+            "missing_categories": self.coordinator.missing_alarm_categories,
+            "stale_categories": self.coordinator.stale_alarm_categories,
+        }

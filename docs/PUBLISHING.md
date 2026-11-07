@@ -1,6 +1,6 @@
 # GitHub and HACS publication
 
-This repository contains the installable 0.4.0 test release. Its manifest points
+This repository contains the stable 0.5.3 release. Its manifest points
 to `solideus/Ingeteam-iss-homeassistant` and identifies `@solideus` as code owner.
 
 1. Keep the integration at `custom_components/ingeteam_iss/`; only one
@@ -8,11 +8,11 @@ to `solideus/Ingeteam-iss-homeassistant` and identifies `@solideus` as code owne
 2. Keep Issues enabled and use the repository topics `home-assistant`, `hacs`,
    `ingeteam`, `solar`, `battery` and `custom-integration`.
 3. Require the integration tests and validation workflow to pass before merging.
-4. Create a tag matching `manifest.json`, initially `v0.4.0`, and publish it as a
-   prerelease for testers. HACS can install directly from the repository layout;
+4. Create a tag matching `manifest.json`, currently `v0.5.3`, and publish it as a
+   stable release after validation. HACS installs from the repository layout;
    this `hacs.json` does not enable ZIP-release installation.
-5. Test the repository through HACS → Custom repositories → Integration before
-   requesting inclusion in the default HACS catalogue.
+5. The integration is included in the HACS default catalogue. Verify upgrades
+   through HACS and keep the release notes and translated documentation current.
 
 Repository publication remains separate from physical testing on the reference inverter.
 The map and current limits target the reference ISS firmware; reports from other

@@ -1,11 +1,12 @@
-# Ingeteam ISS para Home Assistant — 0.5.2
+# Ingeteam ISS para Home Assistant — 0.5.3
 
 [English](README.md) · [Instalación y pruebas](docs/VALIDATION.md) · [Telemetría y energía](docs/TELEMETRY_ENERGY.md) · [Publicación](docs/PUBLISHING.md)
 
 Integración local **no oficial** para el Ingeteam INGECON SUN STORAGE ISS 6TL.
-La versión 0.5.2 reduce las escrituras de los sensores de energía de calendario
-en Recorder, conservando controles, horarios, grupos, identificadores, balance
-neto y precisión energética. No necesita Node-RED, MQTT ni servicios en la nube.
+La versión 0.5.3 corrige la asignación horaria del balance en el panel de Energía,
+la restauración de cierres pendientes y la gestión de alarmas, lecturas inválidas
+y credenciales. Conserva los controles, horarios, grupos, identificadores y
+precisión interna. No necesita Node-RED, MQTT ni servicios en la nube.
 No escribe parámetros durante la instalación.
 
 ## Requisitos y acceso
@@ -32,6 +33,24 @@ confianza; no expongas el puerto HTTP del inversor a Internet. No incluyas
 contraseñas en incidencias, capturas ni automatizaciones.
 
 ## Novedades
+
+**Correcciones de 0.5.3:**
+
+- Cierre del balance neto a las **HH:59:55**, con publicación inmediata. Los
+  últimos cinco segundos alimentan el siguiente periodo de 60 minutos; los
+  intervalos válidos recibidos después del cierre también se conservan.
+- Publicación de subtotales restaurados antes de cierres y reinicios pendientes,
+  para conservar la energía observada en los históricos diarios/mensuales.
+- Alarmas conocidas conservadas ante lecturas parciales, con cobertura y datos
+  pendientes de confirmar explícitos. Una lectura incompleta no confirma ausencia
+  de alarmas.
+- Validación de registros y respuestas HTTP/mapas incompletos, aislando el fallo
+  de las entidades afectadas y manteniendo los controles válidos.
+- Errores de credenciales en el formulario de alta, con mensajes en ocho idiomas.
+- Pruebas de estadísticas horarias con Recorder/SQLite real y cuatro capturas SSE
+  originales. Consulta [actualización y validación de 0.5.3](docs/VERSION_0.5.3.md).
+
+Funciones conservadas:
 
 - Frecuencia: **Tiempo real — SSE (ritmo del inversor)**, **5**, **10** o **30 s**.
   Limita la publicación de estados, conservando todas las muestras para energía.
@@ -203,9 +222,9 @@ El SSE de fases representa el agregado de la instalación. Esta versión se
 dirige a **un inversor ISS por tarjeta de comunicación**. No anuncia soporte
 para múltiples nodos compartiendo una tarjeta ni para mapas arbitrarios.
 
-El repositorio incluye licencia, pruebas, estructura HACS y validaciones
-automáticas HACS/Hassfest. Hasta publicar una versión etiquetada, se puede añadir
-este repositorio a HACS como repositorio personalizado de tipo **Integración**.
+La integración está incluida en el catálogo predeterminado de HACS. Busca
+**Ingeteam ISS** en HACS, instálala, reinicia Home Assistant y añade la integración.
+El repositorio incluye licencia, pruebas y validaciones automáticas HACS/Hassfest.
 Llegar a 1.0 no garantiza la aceptación como integración oficial: será una
 revisión independiente.
 

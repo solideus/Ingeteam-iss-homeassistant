@@ -11,7 +11,7 @@ def bounded_integer(value: Any, minimum: float, maximum: float) -> int:
         raise ValueError("Expected an integer")
     try:
         number = float(value)
-    except (TypeError, ValueError) as err:
+    except (TypeError, ValueError, OverflowError) as err:
         raise ValueError("Expected an integer") from err
     if (
         not isfinite(number)
@@ -20,6 +20,16 @@ def bounded_integer(value: Any, minimum: float, maximum: float) -> int:
     ):
         raise ValueError(f"Expected an integer between {minimum:g} and {maximum:g}")
     return int(number)
+
+
+def register_integer(value: Any, minimum: int, maximum: int) -> int | None:
+    """Read an integral register without converting invalid values to settings."""
+    if not isinstance(value, (int, float)):
+        return None
+    try:
+        return bounded_integer(value, minimum, maximum)
+    except ValueError:
+        return None
 
 
 def scaled_sum(
@@ -35,9 +45,11 @@ def scaled_sum(
             return None
         try:
             number = float(value)
-        except TypeError, ValueError:
+        except TypeError, ValueError, OverflowError:
             return None
         if not isfinite(number):
             return None
         total += number / divisor
+        if not isfinite(total):
+            return None
     return int(total) if total.is_integer() else total

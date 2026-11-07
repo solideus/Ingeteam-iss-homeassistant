@@ -57,11 +57,11 @@ use Home Assistant's time zone. Netting uses fixed 60-minute UTC-aligned hours
 (matching Spain's civil hours); zones offset by fractional hours are not yet
 supported for civil-hour netting.
 
-A new valid sample closes the old bucket at the hour boundary. If no sample
-arrives, a five-second maintenance timer settles the observed subtotal once at
-least five seconds past the boundary. It never estimates the missing time. This
-differs deliberately from early finalization: the last seconds of valid data
-are included. The algorithm is original; only the documented netting behaviour
+In 0.5.0–0.5.2, a new sample closed the old bucket at the hour boundary, or the
+maintenance timer closed it at least five seconds later. **This is superseded
+by 0.5.3:** closing at HH:59:55 publishes the increment inside the closing
+statistics hour. Valid energy after that cutoff feeds the next net window.
+See [0.5.3](VERSION_0.5.3.md). The algorithm is original; only the documented netting behaviour
 of [ha-balance-neto](https://github.com/miguelangellv/ha-balance-neto) was consulted.
 
 Samples more than five seconds apart, invalid channels, interruptions, restarts

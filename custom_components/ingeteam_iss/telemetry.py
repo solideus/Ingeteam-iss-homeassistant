@@ -11,14 +11,23 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    async_track_time_interval,
+    async_track_utc_time_change,
+)
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .accounting import CalendarEnergy
 from .api import IngeteamApi, IngeteamApiError, IngeteamAuthError
-from .const import DEFAULT_SSE_TIMEOUT, DOMAIN, ENERGY_SAVE_INTERVAL, SSE_PHASE_EVENT
+from .const import (
+    DEFAULT_SSE_TIMEOUT,
+    DOMAIN,
+    ENERGY_SAVE_INTERVAL,
+    NET_CLOSE_OFFSET,
+    SSE_PHASE_EVENT,
+)
 from .energy import EnergyAccumulator
 from .sse import decode_telemetry
 
@@ -60,6 +69,7 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.mean_interval: float | None = None
         self.missing_fields: list[str] = []
         self._cancel_tick = None
+        self._cancel_net_close = None
         self._store: Store = Store(
             hass,
             1,
@@ -79,8 +89,9 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.energy.restore(saved["totals"])
             if isinstance(saved.get("calendar"), dict):
                 self.accounting.restore(saved["calendar"])
-        self.accounting.tick(dt_util.utcnow().timestamp())
-        self._publish_calendar_periods()
+        # Expose the restored subtotals first. Platform setup awaits entity
+        # registration; async_start can then publish pending closures and resets
+        # in order, without losing them before the calendar listeners exist.
 
     @callback
     def async_add_calendar_listener(
@@ -126,8 +137,12 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def async_start(self) -> None:
         if self._task is None:
             self._stopping = False
+            self._tick(dt_util.utcnow())
             self._cancel_tick = async_track_time_interval(
                 self.hass, self._tick, timedelta(seconds=5)
+            )
+            self._cancel_net_close = async_track_utc_time_change(
+                self.hass, self._tick, minute=59, second=60 - NET_CLOSE_OFFSET
             )
             self._task = self._entry.async_create_background_task(
                 self.hass, self._run(), f"{DOMAIN} SSE"
@@ -139,6 +154,9 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self._cancel_tick:
             self._cancel_tick()
             self._cancel_tick = None
+        if self._cancel_net_close:
+            self._cancel_net_close()
+            self._cancel_net_close = None
         if self._task is not None:
             self._task.cancel()
             with suppress(asyncio.CancelledError):

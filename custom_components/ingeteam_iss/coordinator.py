@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .alarms import decode_alarms
+from .alarms import ALARM_FIELDS, decode_alarms, raw_integer
 from .api import IngeteamApi, IngeteamApiError, IngeteamAuthError
 from .const import DEFAULT_SCAN_INTERVAL, DEFAULT_SSE_TIMEOUT, DOMAIN
 from .telemetry import IngeteamTelemetryCoordinator
@@ -46,8 +46,15 @@ class IngeteamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.alarms: list[dict] = []
         self.raw_alarms: dict = {}
         self._alarm_snapshot: dict = {}
+        self.missing_alarm_categories: list[str] = []
+        self.stale_alarm_categories: list[str] = []
+        self.alarm_coverage_complete = False
         self.telemetry = IngeteamTelemetryCoordinator(
-            hass, api, config_entry=config_entry, time_zone=time_zone, timeout=sse_timeout
+            hass,
+            api,
+            config_entry=config_entry,
+            time_zone=time_zone,
+            timeout=sse_timeout,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -64,11 +71,26 @@ class IngeteamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             except IngeteamApiError as err:
                 _LOGGER.debug("Live telemetry update failed: %s", err)
                 online = {}
-            self.alarms, self.raw_alarms = decode_alarms(
+            alarms, self.raw_alarms = decode_alarms(
                 online, self.api.capabilities, self.hass.config.language
             )
-            current = {(a["address"], a["bit"]): a for a in self.alarms}
-            valid_addresses = {address for address, _ in online}
+            current = {(a["address"], a["bit"]): a for a in alarms}
+            expected = {
+                address
+                for address in ALARM_FIELDS
+                if self.api.supports("online", address)
+            }
+            valid_addresses = {
+                address
+                for address in ALARM_FIELDS
+                if raw_integer(online.get((address, 0))) is not None
+            }
+            self.missing_alarm_categories = [
+                ALARM_FIELDS[address] for address in sorted(expected - valid_addresses)
+            ]
+            self.alarm_coverage_complete = (
+                bool(expected) and not self.missing_alarm_categories
+            )
             for key in self._alarm_snapshot.keys() | current.keys():
                 if key[0] not in valid_addresses:
                     continue  # A failed read is not an alarm clearing.
@@ -89,6 +111,13 @@ class IngeteamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 },
                 **current,
             }
+            self.alarms = [
+                {**alarm, "stale": key[0] not in valid_addresses}
+                for key, alarm in sorted(self._alarm_snapshot.items())
+            ]
+            self.stale_alarm_categories = sorted(
+                {alarm["category"] for alarm in self.alarms if alarm["stale"]}
+            )
             return {"holding": holding, "online": online}
 
     async def async_write(self, address: int, startbit: int, value: int) -> None:

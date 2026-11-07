@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import GROUP_GRID_CHARGE, GROUP_SCHEDULED_DISCHARGE, Register
 from .coordinator import IngeteamCoordinator
 from .entity import IngeteamEntity
+from .values import register_integer
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -128,18 +129,17 @@ class IngeteamTime(IngeteamEntity, TimeEntity):
     @property
     def native_value(self) -> time | None:
         """Return the confirmed hour and minute."""
-        minute = self._register_value()
-        hour = (
+        minute = register_integer(self._register_value(), 0, 59)
+        hour = register_integer(
             (self.coordinator.data or {})
             .get("holding", {})
-            .get((self.register.address, 8))
+            .get((self.register.address, 8)),
+            0,
+            23,
         )
         if minute is None or hour is None:
             return None
-        try:
-            return time(hour=int(hour), minute=int(minute))
-        except TypeError, ValueError:
-            return None
+        return time(hour=hour, minute=minute)
 
     async def async_set_value(self, value: time) -> None:
         """Write minute and hour together, then read the confirmed value."""

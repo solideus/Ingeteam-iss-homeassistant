@@ -61,15 +61,15 @@ class IngeteamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     step_id="user", data_schema=_user_schema(), errors=errors
                 )
             host = user_input[CONF_HOST].strip()
-            api = IngeteamApi(
-                async_get_clientsession(self.hass),
-                host,
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-                port=user_input[CONF_PORT],
-                device_id=user_input[CONF_DEVICE_ID],
-            )
             try:
+                api = IngeteamApi(
+                    async_get_clientsession(self.hass),
+                    host,
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                    port=user_input[CONF_PORT],
+                    device_id=user_input[CONF_DEVICE_ID],
+                )
                 info = await api.async_device_info()
                 holding = await api.async_read_holding()
                 if not holding:
@@ -80,6 +80,8 @@ class IngeteamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except IngeteamConnectionError:
                 errors["base"] = "cannot_connect"
+            except ValueError, UnicodeError:
+                errors["base"] = "invalid_connection_settings"
             except Exception:  # Home Assistant shows a generic setup error.
                 errors["base"] = "unknown"
             else:

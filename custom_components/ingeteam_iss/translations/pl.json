@@ -51,7 +51,7 @@
       "cannot_connect": "Nie można połączyć się z falownikiem",
       "invalid_auth": "Nieprawidłowa nazwa użytkownika lub hasło",
       "unknown": "Nieoczekiwany błąd",
-      "invalid_connection_settings": "ID musi być liczbą całkowitą od 1 do 247, a port od 1 do 65535",
+      "invalid_connection_settings": "Nieprawidłowe ustawienia połączenia. ID musi być liczbą całkowitą od 1 do 247, a port od 1 do 65535. Nazwa użytkownika nie może zawierać ':'. Nazwa użytkownika i hasło muszą używać znaków Latin-1.",
       "unsupported_device": "Brak obsługiwanych rejestrów dla tego ID falownika.",
       "different_device": "Numer seryjny należy do innego urządzenia. Historia nie zostanie połączona."
     },

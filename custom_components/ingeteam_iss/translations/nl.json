@@ -51,7 +51,7 @@
       "cannot_connect": "Kan geen verbinding maken met de omvormer",
       "invalid_auth": "Onjuiste gebruikersnaam of wachtwoord",
       "unknown": "Onverwachte fout",
-      "invalid_connection_settings": "De ID moet een geheel getal van 1 tot 247 zijn en de poort van 1 tot 65535",
+      "invalid_connection_settings": "Ongeldige verbindingsinstellingen. De ID moet een geheel getal van 1 tot 247 zijn en de poort van 1 tot 65535. De gebruikersnaam mag geen ':' bevatten. Gebruikersnaam en wachtwoord moeten Latin-1-tekens gebruiken.",
       "unsupported_device": "Geen ondersteunde registers gevonden voor dit omvormer-ID.",
       "different_device": "Het serienummer hoort bij een ander apparaat. De geschiedenis wordt niet samengevoegd."
     },

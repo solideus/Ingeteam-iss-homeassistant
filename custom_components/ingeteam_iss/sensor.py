@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .accounting import ACCOUNTING_KEYS
-from .alarms import ALARM_FIELDS, flow_state
+from .alarms import flow_state
 from .const import ENERGY_PUBLISH_INTERVAL, GROUP_ENERGY, Register
 from .coordinator import IngeteamCoordinator
 from .diagnostics import telemetry_diagnostics
@@ -303,8 +303,8 @@ class IngeteamAlarmSensor(IngeteamEntity, SensorEntity):
 
     @property
     def available(self):
-        return self.coordinator.last_update_success and bool(
-            self.coordinator.raw_alarms
+        return self.coordinator.last_update_success and (
+            bool(self.coordinator.alarms) or self.coordinator.alarm_coverage_complete
         )
 
     @property
@@ -317,11 +317,9 @@ class IngeteamAlarmSensor(IngeteamEntity, SensorEntity):
             "alarms": self.coordinator.alarms,
             "raw_codes": self.coordinator.raw_alarms,
             "coverage": "device_map",
-            "missing_categories": [
-                category
-                for category in ALARM_FIELDS.values()
-                if category not in self.coordinator.raw_alarms
-            ],
+            "coverage_complete": self.coordinator.alarm_coverage_complete,
+            "missing_categories": self.coordinator.missing_alarm_categories,
+            "stale_categories": self.coordinator.stale_alarm_categories,
         }
 
 

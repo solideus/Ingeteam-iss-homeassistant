@@ -7,7 +7,7 @@ power/time anchors. Hour identifiers are UTC timestamps (DST-safe).
 
 from datetime import datetime, timezone, tzinfo
 
-from .const import ENERGY_MAX_GAP
+from .const import ENERGY_MAX_GAP, NET_CLOSE_OFFSET
 from .sse import finite_number
 
 ACCOUNTING_KEYS = (
@@ -24,7 +24,7 @@ ACCOUNTING_KEYS = (
 
 
 class CalendarEnergy:
-    """Persistent calendar buckets with a five-second settlement safety margin."""
+    """Calendar meters and 60-minute net windows closing at HH:59:55 UTC."""
 
     def __init__(self, time_zone: tzinfo) -> None:
         self.zone = time_zone
@@ -61,15 +61,17 @@ class CalendarEnergy:
 
     def restore(self, saved: dict) -> None:
         self._period_updates.clear()
+        values = saved.get("values")
+        values = values if isinstance(values, dict) else {}
         for key in self.values:
             if key != "hourly_net_balance":
-                value = finite_number(saved.get("values", {}).get(key), minimum=0)
+                value = finite_number(values.get(key), minimum=0)
                 if value is not None:
                     self.values[key] = value
         self.day = str(saved.get("day", ""))
         self.month = str(saved.get("month", ""))
         hour = saved.get("hour")
-        self.hour = hour if type(hour) is int and hour >= 0 else None
+        self.hour = hour if type(hour) is int and 0 <= hour <= 253402297200 else None
         self.imported = finite_number(saved.get("imported"), minimum=0) or 0.0
         self.exported = finite_number(saved.get("exported"), minimum=0) or 0.0
         self.values["hourly_net_balance"] = self.exported - self.imported
@@ -111,7 +113,7 @@ class CalendarEnergy:
         self.imported = self.exported = 0.0
 
     def _hour(self, timestamp: float) -> bool:
-        hour = int(timestamp // 3600) * 3600
+        hour = self._net_hour(timestamp)
         if self.hour is not None and hour < self.hour:
             return False  # Never reopen an already accounted hour after clock rollback.
         if self.hour != hour:
@@ -120,12 +122,18 @@ class CalendarEnergy:
         self._period(timestamp)
         return True
 
+    @staticmethod
+    def _net_hour(timestamp: float) -> int:
+        # Nominal hour identity remains UTC/DST-safe and compatible with saved
+        # 0.5.2 buckets. The last five seconds feed the following net window.
+        return int((timestamp + NET_CLOSE_OFFSET) // 3600) * 3600
+
     def tick(self, timestamp: float) -> None:
-        """Close idle hours once safely past the boundary; never invent energy."""
-        if self.hour is not None and timestamp < self.hour:
+        """Publish observed net energy before the statistics hour ends."""
+        if self.hour is not None and self._net_hour(timestamp) < self.hour:
             self.break_interval()
             return  # A wall-clock rollback must not reset calendar totals.
-        if self.hour is not None and timestamp >= self.hour + 3605:
+        if self.hour is not None and self._net_hour(timestamp) > self.hour:
             self._hour(timestamp)
         self._period(timestamp)
 
@@ -141,8 +149,22 @@ class CalendarEnergy:
             ):
                 cursor = wall
                 while cursor < timestamp:
-                    end = min(timestamp, (int(cursor // 3600) + 1) * 3600)
-                    if self._hour(cursor):
+                    end = min(
+                        timestamp,
+                        (int(cursor // 3600) + 1) * 3600,
+                        self._net_hour(cursor) + 3600 - NET_CLOSE_OFFSET,
+                    )
+                    active = self._hour(cursor)
+                    # The HH:59:55 timer may precede the next valid SSE sample.
+                    # Carry its unobserved tail into the open window rather than
+                    # reopening a published balance or discarding valid energy.
+                    carry = (
+                        self.hour is not None
+                        and self._net_hour(timestamp) == self.hour
+                        and cursor >= self.hour - NET_CLOSE_OFFSET - ENERGY_MAX_GAP
+                    )
+                    if active or carry:
+                        self._period(cursor)
                         seconds = (end - cursor) * elapsed / (timestamp - wall)
                         for source, target in (
                             ("total_load_power", "load"),

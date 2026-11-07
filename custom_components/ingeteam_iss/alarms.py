@@ -21,20 +21,32 @@ def raw_integer(value):
 
 
 def label_for(mapping: dict, address: int, code: int, language: str) -> str | None:
+    fields = mapping.get("online")
     field = next(
         (
             f
-            for f in mapping.get("online", [])
+            for f in (fields if isinstance(fields, list) else [])
             if isinstance(f, dict) and f.get("add") == address
         ),
         {},
     )
-    values = mapping.get("customtypes", {}).get(field.get("ty"), {}).get("values", {})
+    types = mapping.get("customtypes")
+    types = types if isinstance(types, dict) else {}
+    name = field.get("ty")
+    custom_type = types.get(name) if isinstance(name, str) else None
+    values = custom_type.get("values") if isinstance(custom_type, dict) else None
+    values = values if isinstance(values, dict) else {}
     tid = values.get(f"0{code}")
+    if not isinstance(tid, str):
+        return None
     lang = {"es": "SPANISH", "it": "ITALIAN"}.get(language, "ENGLISH")
-    label = mapping.get("langs", {}).get(lang, {}).get(tid)
-    if not isinstance(label, str) or label.lower().startswith(
-        ("bit ", "freeuse", "libre")
+    langs = mapping.get("langs")
+    labels = langs.get(lang) if isinstance(langs, dict) else None
+    label = labels.get(tid) if isinstance(labels, dict) else None
+    if (
+        not isinstance(label, str)
+        or not label.strip()
+        or label.strip().lower().startswith(("bit ", "freeuse", "libre"))
     ):
         return None
     return label

@@ -30,7 +30,7 @@ from .const import (
 )
 from .coordinator import IngeteamCoordinator
 from .entity import IngeteamEntity
-from .values import bounded_integer
+from .values import bounded_integer, register_integer
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -243,9 +243,17 @@ class IngeteamNumber(IngeteamEntity, NumberEntity):
         self._attr_unique_id = f"{self._serial}_{description.key}"
 
     @property
+    def available(self) -> bool:
+        return super().available and self.native_value is not None
+
+    @property
     def native_value(self) -> float | None:
         """Return the confirmed register value."""
-        value = self._register_value()
+        value = register_integer(
+            self._register_value(),
+            self.entity_description.native_min_value,
+            self.entity_description.native_max_value,
+        )
         return float(value) if value is not None else None
 
     async def async_set_native_value(self, value: float) -> None:

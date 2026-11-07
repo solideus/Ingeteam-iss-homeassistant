@@ -51,7 +51,7 @@
       "cannot_connect": "Não foi possível ligar ao inversor",
       "invalid_auth": "Nome de utilizador ou palavra-passe incorretos",
       "unknown": "Erro inesperado",
-      "invalid_connection_settings": "O ID deve ser um inteiro de 1 a 247 e a porta de 1 a 65535",
+      "invalid_connection_settings": "Definições de ligação inválidas. O ID deve ser um inteiro de 1 a 247 e a porta de 1 a 65535. O utilizador não pode conter ':'. O utilizador e a palavra-passe devem utilizar caracteres Latin-1.",
       "unsupported_device": "Não foram encontrados registos compatíveis para este ID do inversor.",
       "different_device": "O número de série pertence a outro equipamento. Os históricos não serão misturados."
     },

@@ -1,5 +1,31 @@
 # Registro de cambios
 
+## 0.5.3 — Correcciones de balance horario y robustez
+
+- Cierra el balance neto a HH:59:55 y publica inmediatamente los acumulados,
+  antes del límite de la hora estadística. Mantiene periodos de 60 minutos y
+  conserva en el siguiente balance la energía observada después del cierre.
+- Añade un temporizador horario independiente de SSE, cancelado al descargar.
+  Cierres repetidos no vuelven a contabilizar el periodo.
+- Restaura y publica los subtotales antes de procesar cierres y reinicios de
+  calendario, conservando los incrementos pendientes en los históricos.
+- Conserva alarmas conocidas cuando falta su categoría; expone cobertura y
+  categorías pendientes de confirmar. Una lectura parcial sin códigos no se
+  presenta como ausencia confirmada de alarmas.
+- Rechaza números, modos, bits y horas inválidos sin truncarlos ni mantener
+  valores antiguos disponibles. Un campo defectuoso no interrumpe los restantes.
+- Valida estructuras HTTP y mapas incompletos para aislar los errores de
+  telemetría y conservar los controles con lectura válida.
+- Captura los errores de credenciales durante el alta, según la observación de
+  la revisión HACS, y amplía el mensaje de configuración en ocho idiomas.
+- Añade cuatro capturas SSE originales y regresiones de los casos anteriores,
+  incluidas estadísticas horarias reales de Recorder con SQLite.
+- Conserva identidades, unidades, acumulados, límite ordinario de publicación de
+  energía de 30 s y resolución asíncrona de zona horaria.
+- No modifica las estadísticas históricas ya generadas ni estima energía durante
+  huecos sin datos. Los cierres recuperados tras una parada tienen la fecha de
+  su publicación al reiniciar, sin reconstruir la hora de apagado.
+
 ## 0.5.2 — Optimización de sensores de energía
 
 - Los nueve sensores de calendario y balance neto heredan el límite de publicación
