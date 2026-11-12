@@ -49,7 +49,7 @@
       },
       "model": {
         "title": "Inverter model",
-        "description": "Detected from the inverter map: {detected}. The STORAGE 1Play profile is read-only: its registers have different meanings, so no controls are created.",
+        "description": "Detected from the inverter map: {detected}. The STORAGE 1Play profile only offers settings validated on that model; the ISS controls are not created because its registers have different meanings.",
         "data": {
           "model": "Model"
         },
@@ -480,7 +480,7 @@
     "model": {
       "options": {
         "iss": "ISS (reference firmware ABH1007AE) — monitoring and controls",
-        "storage_1play": "INGECON SUN STORAGE 1Play (map ABH1002) — monitoring only"
+        "storage_1play": "INGECON SUN STORAGE 1Play (map ABH1002) — monitoring and validated settings"
       }
     }
   }

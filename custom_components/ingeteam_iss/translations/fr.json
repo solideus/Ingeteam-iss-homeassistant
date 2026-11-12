@@ -49,7 +49,7 @@
       },
       "model": {
         "title": "Modèle d'onduleur",
-        "description": "Détecté dans la carte de l'onduleur : {detected}. Le profil STORAGE 1Play est en lecture seule : ses registres ont d'autres significations, aucune commande n'est donc créée.",
+        "description": "Détecté dans la carte de l'onduleur : {detected}. Le profil STORAGE 1Play ne propose que les réglages validés sur ce modèle ; les commandes ISS ne sont pas créées car ses registres ont d'autres significations.",
         "data": {
           "model": "Modèle"
         },
@@ -480,7 +480,7 @@
     "model": {
       "options": {
         "iss": "ISS (firmware de référence ABH1007AE) — surveillance et commandes",
-        "storage_1play": "INGECON SUN STORAGE 1Play (carte ABH1002) — surveillance uniquement"
+        "storage_1play": "INGECON SUN STORAGE 1Play (carte ABH1002) — surveillance et réglages validés"
       }
     }
   }

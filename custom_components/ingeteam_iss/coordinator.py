@@ -83,7 +83,7 @@ class IngeteamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     _LOGGER.debug("Live telemetry update failed: %s", err)
                     online = {}
             else:
-                # Read-only profiles never read or write holding registers.
+                # Profiles without holding ranges never read or write them.
                 holding = {}
                 try:
                     online = await self.api.async_read_online(

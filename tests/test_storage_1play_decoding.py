@@ -119,8 +119,28 @@ def test_profiles():
     iss = PROFILES[MODEL_ISS]
     play = PROFILES[MODEL_STORAGE_1PLAY]
     assert iss.writable and "number" in iss.platforms
-    assert not play.writable
-    assert set(play.platforms) == {"sensor", "binary_sensor"}
+    assert play.writable
+    assert set(play.platforms) == {"sensor", "binary_sensor", "number"}
+    assert play.control_keys == ("soc_max",)
+    assert play.holding_ranges == ({"address": 123, "length": 1},)
+
+
+def test_1play_controls_match_their_map_entries():
+    """Every enabled 1Play control is the same setting in the device map."""
+    number = pytest.importorskip("custom_components.ingeteam_iss.number")
+    fields = {(f["add"], f.get("start", 0)): f for f in FIXTURE["map"]["holding"]}
+    for desc in number.NUMBERS:
+        if desc.key not in PROFILES[MODEL_STORAGE_1PLAY].control_keys:
+            continue
+        field = fields[desc.register.address, desc.register.startbit]
+        assert field["uw"] == 1
+        assert (field["min"], field["max"]) == (
+            desc.native_min_value,
+            desc.native_max_value,
+        )
+        assert field["sc"] == 1
+        label = FIXTURE["map"]["langs"]["ENGLISH"].get(field["tid"], "")
+        assert label.startswith("SOCmax"), label
 
 
 def test_1play_ranges_cover_every_online_register_of_the_map():

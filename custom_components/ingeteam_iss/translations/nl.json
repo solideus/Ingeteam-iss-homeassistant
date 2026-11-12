@@ -49,7 +49,7 @@
       },
       "model": {
         "title": "Omvormermodel",
-        "description": "Gedetecteerd in de omvormermap: {detected}. Het profiel STORAGE 1Play is alleen-lezen: de registers hebben een andere betekenis, dus er worden geen bedieningselementen aangemaakt.",
+        "description": "Gedetecteerd in de omvormermap: {detected}. Het profiel STORAGE 1Play biedt alleen instellingen die op dat model zijn gevalideerd; de ISS-bediening wordt niet aangemaakt omdat de registers een andere betekenis hebben.",
         "data": {
           "model": "Model"
         },
@@ -480,7 +480,7 @@
     "model": {
       "options": {
         "iss": "ISS (referentiefirmware ABH1007AE) — bewaking en bediening",
-        "storage_1play": "INGECON SUN STORAGE 1Play (map ABH1002) — alleen bewaking"
+        "storage_1play": "INGECON SUN STORAGE 1Play (map ABH1002) — bewaking en gevalideerde instellingen"
       }
     }
   }

@@ -31,7 +31,7 @@ from .const import (
 )
 from .coordinator import IngeteamCoordinator
 from .entity import inverter_device_info
-from .models import CONF_MODEL, MODEL_ISS
+from .models import CONF_MODEL, CONTROL_DOMAINS, MODEL_ISS
 
 type IngeteamConfigEntry = ConfigEntry[IngeteamCoordinator]
 
@@ -103,19 +103,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: IngeteamConfigEntry) -> 
 def _async_remove_unsupported_entities(
     hass: HomeAssistant, entry: ConfigEntry, coordinator: IngeteamCoordinator
 ) -> None:
-    """Drop entities a read-only profile never creates (e.g. ISS controls).
+    """Drop entities a restricted profile never creates (e.g. ISS controls).
 
     They would otherwise stay registered as unavailable controls that, on a
     STORAGE 1Play, point at registers with a different meaning.
     """
     profile = coordinator.profile
-    if profile.writable:
-        return
+    if profile.control_keys is None and not profile.retired_keys:
+        return  # The ISS profile keeps its full, original entity set.
     registry = er.async_get(hass)
-    stale_suffixes = tuple(f"_{key}" for key in profile.retired_keys)
+    prefix = f"{coordinator.identity}_"
     for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
-        if entity.domain not in profile.platforms or (
-            stale_suffixes and entity.unique_id.endswith(stale_suffixes)
+        key = entity.unique_id.removeprefix(prefix)
+        unsupported_control = (
+            entity.domain in CONTROL_DOMAINS
+            and profile.control_keys is not None
+            and key not in profile.control_keys
+        )
+        if (
+            entity.domain not in profile.platforms
+            or unsupported_control
+            or key in profile.retired_keys
         ):
             registry.async_remove(entity.entity_id)
 

@@ -49,7 +49,7 @@
       },
       "model": {
         "title": "Modelo de inversor",
-        "description": "Detectado en el mapa del inversor: {detected}. El perfil STORAGE 1Play es de solo lectura: sus registros tienen otro significado, así que no se crean controles.",
+        "description": "Detectado en el mapa del inversor: {detected}. El perfil STORAGE 1Play solo ofrece los ajustes validados en ese modelo; los controles del ISS no se crean porque sus registros tienen otro significado.",
         "data": {
           "model": "Modelo"
         },
@@ -480,7 +480,7 @@
     "model": {
       "options": {
         "iss": "ISS (firmware de referencia ABH1007AE) — monitorización y controles",
-        "storage_1play": "INGECON SUN STORAGE 1Play (mapa ABH1002) — solo monitorización"
+        "storage_1play": "INGECON SUN STORAGE 1Play (mapa ABH1002) — monitorización y ajustes validados"
       }
     }
   }

@@ -17,11 +17,11 @@ mapa (`/inverter/map`, `compatible.firmware`):
 | Perfil | Firmware del mapa | Alcance |
 |---|---|---|
 | **ISS** (predeterminado) | ABH1007AE | Monitorización y controles, como se describe abajo |
-| **INGECON SUN STORAGE 1Play** | ABH1002 | Experimental, monitorización **de solo lectura** |
+| **INGECON SUN STORAGE 1Play** | ABH1002 | Experimental: monitorización y ajustes validados en ese modelo (SOCmax) |
 
 Las entradas existentes conservan el perfil ISS. El modelo se puede cambiar con
-*Reconfigurar*. El perfil 1Play no crea controles, porque muchos de sus
-registros tienen otro significado; consulta [STORAGE 1Play](docs/STORAGE_1PLAY.md).
+*Reconfigurar*. El perfil 1Play no crea los controles del ISS, porque muchos de
+sus registros tienen otro significado; consulta [STORAGE 1Play](docs/STORAGE_1PLAY.md).
 
 ## Requisitos y acceso
 

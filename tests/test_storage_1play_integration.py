@@ -48,6 +48,10 @@ async def play(tmp_path, monkeypatch):
     )
     data = {
         "online": {(int(a), 0): v for a, v in FIXTURE["online"].items()},
+        "holding": {
+            tuple(map(int, key.split("."))): value
+            for key, value in FIXTURE["holding"].items()
+        },
         "reads": [],
         "writes": [],
         "sse_queue": asyncio.Queue(),
@@ -86,10 +90,19 @@ async def play(tmp_path, monkeypatch):
         body = json.loads(await request.text())
         if "/write/" in request.path:
             data["writes"].append(body)
-            raise web.HTTPForbidden()
+            for value in body["Values"]:
+                data["holding"][value["address"], value["startbit"]] = value["value"]
+            return web.json_response(
+                {
+                    "result": [
+                        {"address": v["address"], "length": 1, "success": True}
+                        for v in body["Values"]
+                    ]
+                }
+            )
         source = "online" if "/online/" in request.path else "holding"
         data["reads"].append((source, body))
-        values = data["online"] if source == "online" else {}
+        values = data[source]
         blocks = [
             {
                 "data": [
@@ -167,15 +180,32 @@ def state(hass, domain, key):
     return hass.states.get(entity_id)
 
 
-async def test_read_only_profile_creates_no_controls_and_never_writes(play):
+async def test_only_validated_controls_and_no_unrequested_writes(play):
     hass, entry, data = play
     entities = er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
-    domains = {e.domain for e in entities}
-    assert domains <= {"sensor", "binary_sensor"}
-    assert not any(source == "holding" for source, _ in data["reads"])
+    assert {e.domain for e in entities} <= {"sensor", "binary_sensor", "number"}
+    numbers = {e.unique_id for e in entities if e.domain == "number"}
+    assert numbers == {f"{SERIAL}_soc_max"}
+    # Holding reads are limited to the validated register; setup never writes.
+    holding_reads = [body for source, body in data["reads"] if source == "holding"]
+    assert holding_reads
+    assert all(body == [{"address": 123, "length": 1}] for body in holding_reads)
     assert data["writes"] == []
     keys = {e.unique_id.removeprefix(f"{SERIAL}_") for e in entities}
     assert "pv_1_power" not in keys and "pv_2_power" not in keys
+
+
+async def test_soc_max_write_and_readback(play):
+    hass, _, data = play
+    assert state(hass, "number", "soc_max").state == "95.0"
+    entity_id = state(hass, "number", "soc_max").entity_id
+    await hass.services.async_call(
+        "number", "set_value", {"entity_id": entity_id, "value": 96}, blocking=True
+    )
+    assert data["writes"][-1]["Values"] == [
+        {"address": 123, "startbit": 0, "value": 96}
+    ]
+    assert state(hass, "number", "soc_max").state == "96.0"
 
 
 async def test_sse_telemetry_with_stream_status(play):
@@ -237,3 +267,4 @@ async def test_stale_iss_entities_are_removed_on_setup(play):
     for domain, key in (("number", "bms_max_charge_current"), ("sensor", "pv_2_power")):
         assert registry.async_get_entity_id(domain, DOMAIN, f"{SERIAL}_{key}") is None
     assert registry.async_get_entity_id("sensor", DOMAIN, f"{SERIAL}_battery_soc")
+    assert registry.async_get_entity_id("number", DOMAIN, f"{SERIAL}_soc_max")

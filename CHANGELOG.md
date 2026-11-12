@@ -13,9 +13,10 @@
   corrientes, frecuencias, temperaturas, aislamiento, SOH, estados) y decodifica
   sus alarmas en sus propias direcciones; «conectado a red» usa el bit 0 del
   estado del inversor (Modbus 30013).
-- El perfil 1Play no carga plataformas de control, no lee registros holding,
-  rechaza escrituras y elimina al arrancar los controles y las cadenas FV que
-  hubiera dejado una entrada ISS.
+- El perfil 1Play solo crea los controles validados en ese modelo (por ahora
+  SOCmax, registro 123, probado con escritura y relectura en un equipo real),
+  solo lee esos registros holding y elimina al arrancar los controles y las
+  cadenas FV que hubiera dejado una entrada ISS.
 - Pruebas con capturas reales del 1Play y documentación en
   `docs/STORAGE_1PLAY.md`.
 

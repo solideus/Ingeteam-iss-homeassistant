@@ -1,4 +1,4 @@
-# INGECON SUN STORAGE 1Play — read-only profile
+# INGECON SUN STORAGE 1Play profile
 
 Status: **experimental, monitoring only.** Reported in issue #7 and validated on
 one installation (single-phase, with battery):
@@ -28,9 +28,9 @@ maps:
 
 The profile therefore:
 
-- loads only the `sensor` and `binary_sensor` platforms; it creates no number,
-  switch, select or time entity, never reads holding registers and refuses
-  writes in the coordinator;
+- loads `sensor`, `binary_sensor` and `number` only, and creates just the
+  controls listed in its `control_keys` (see *Settings* below); it reads only
+  those holding registers;
 - removes, at setup, entities a previous ISS-profile entry left behind
   (controls and `pv_1_power`/`pv_2_power`);
 - reads every online register the device map declares and decodes alarms and
@@ -91,11 +91,22 @@ document).
 Registers 30032–30034 (inverter cos φ, active and reactive power) are in the
 Modbus document but not in the HTTP map, so they are not read.
 
+## Settings
+
+| Holding | Map entry | Entity | Range | Validation |
+|---|---|---|---|---|
+| 123 | *SOCmax: Maximum charge limit of renewable source (%)*, `sc` 1 | `number` `soc_max` | 0–100 % | 95 → 96 → 95 on a real 1Play: write confirmed, readback and next poll matched |
+
+The ISS uses the same address and meaning for SOCmax. The holding read of the
+1Play profile is limited to these registers.
+
 ## Not covered yet
 
 - Energy counters are integrated from SSE power, as for the ISS; no 1Play
   device counter has been identified.
-- No write support. Controls would need a confirmed 1Play holding map
-  (address, bit, range, scale and meaning) per field and physical validation.
+- Other settings. Each one needs its 1Play map entry (address, bit, range,
+  scale and meaning) and a write/readback on a real inverter before it is
+  added to `control_keys`. Grid protection, regulation, country, battery type
+  and grid-quality algorithms are installer settings and stay out of scope.
 - Three-phase 1Play installations: the per-phase sum is implemented but only
   a single-phase system has been observed.

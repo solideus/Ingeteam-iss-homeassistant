@@ -221,10 +221,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up writable number entities."""
+    keys = entry.runtime_data.profile.control_keys
     async_add_entities(
         IngeteamNumber(entry.runtime_data, desc)
         for desc in NUMBERS
-        if entry.runtime_data.api.supports(
+        if (keys is None or desc.key in keys)
+        and entry.runtime_data.api.supports(
             "holding", desc.register.address, desc.register.startbit
         )
     )

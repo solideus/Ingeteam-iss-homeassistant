@@ -1,9 +1,10 @@
 """Model profiles: each supported inverter family declares what it can do.
 
 The ISS profile is the original, validated behaviour (reference firmware
-ABH1007AE). The STORAGE 1Play profile is read-only: its register map assigns
-different meanings to several addresses used by the ISS controls, so no
-writable entity is created for it.
+ABH1007AE). The STORAGE 1Play map assigns different meanings to several
+addresses used by the ISS controls, so that profile only creates the controls
+listed in ``control_keys``, each confirmed by its own map and validated with a
+write/readback on a real inverter.
 """
 
 from __future__ import annotations
@@ -43,6 +44,14 @@ STORAGE_1PLAY_ONLINE_RANGES = (
 )
 
 
+# Only settings whose address, range and meaning are confirmed by the 1Play
+# map and validated with a write/readback on a real inverter.
+STORAGE_1PLAY_HOLDING_RANGES = ({"address": 123, "length": 1},)
+STORAGE_1PLAY_CONTROL_KEYS = ("soc_max",)
+
+CONTROL_DOMAINS = ("number", "switch", "select", "time")
+
+
 @dataclass(frozen=True, slots=True)
 class ModelProfile:
     """Capabilities and register layout of one inverter family."""
@@ -58,6 +67,8 @@ class ModelProfile:
     power_reduction_register: int | None = None
     # ISS entity keys whose registers mean something else on this model.
     retired_keys: tuple[str, ...] = ()
+    # Writable entities this profile creates; None = the full ISS set.
+    control_keys: tuple[str, ...] | None = None
 
     @property
     def writable(self) -> bool:
@@ -75,8 +86,10 @@ PROFILES: dict[str, ModelProfile] = {
     ),
     MODEL_STORAGE_1PLAY: ModelProfile(
         key=MODEL_STORAGE_1PLAY,
-        platforms=("sensor", "binary_sensor"),
+        platforms=("sensor", "binary_sensor", "number"),
         online_ranges=STORAGE_1PLAY_ONLINE_RANGES,
+        holding_ranges=STORAGE_1PLAY_HOLDING_RANGES,
+        control_keys=STORAGE_1PLAY_CONTROL_KEYS,
         alarm_fields=STORAGE_1PLAY_ALARM_FIELDS,
         decode_telemetry=decode_telemetry_per_phase,
         decode_stream=decode_stream,
