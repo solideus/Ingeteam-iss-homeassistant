@@ -12,9 +12,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .alarms import ALARM_FIELDS, decode_alarms, raw_integer
+from .alarms import decode_alarms, raw_integer
 from .api import IngeteamApi, IngeteamApiError, IngeteamAuthError
 from .const import DEFAULT_SCAN_INTERVAL, DEFAULT_SSE_TIMEOUT, DOMAIN
+from .models import MODEL_ISS, get_profile
 from .telemetry import IngeteamTelemetryCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,6 +33,7 @@ class IngeteamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         config_entry: ConfigEntry,
         time_zone: tzinfo,
         sse_timeout: int = DEFAULT_SSE_TIMEOUT,
+        model: str = MODEL_ISS,
     ) -> None:
         super().__init__(
             hass,
@@ -41,6 +43,7 @@ class IngeteamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=config_entry,
         )
         self.api = api
+        self.profile = get_profile(model)
         self.device_info: dict[str, Any] = {}
         self._operation_lock = asyncio.Lock()
         self.alarms: list[dict] = []
@@ -56,37 +59,54 @@ class IngeteamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             time_zone=time_zone,
             timeout=sse_timeout,
         )
+        self.telemetry.decode_telemetry = self.profile.decode_telemetry
+        self.telemetry.decode_stream = self.profile.decode_stream
 
     async def _async_update_data(self) -> dict[str, Any]:
         async with self._operation_lock:
-            try:
-                holding = await self.api.async_read_holding()
-            except IngeteamAuthError as err:
-                raise ConfigEntryAuthFailed(str(err)) from err
-            except IngeteamApiError as err:
-                raise UpdateFailed(str(err)) from err
-            # Missing telemetry must not disable otherwise working EMS controls.
-            try:
-                online = await self.api.async_read_online()
-            except IngeteamApiError as err:
-                _LOGGER.debug("Live telemetry update failed: %s", err)
-                online = {}
+            fields = self.profile.alarm_fields
+            if self.profile.writable:
+                try:
+                    holding = await self.api.async_read_holding(
+                        self.profile.holding_ranges
+                    )
+                except IngeteamAuthError as err:
+                    raise ConfigEntryAuthFailed(str(err)) from err
+                except IngeteamApiError as err:
+                    raise UpdateFailed(str(err)) from err
+                # Missing telemetry must not disable otherwise working EMS controls.
+                try:
+                    online = await self.api.async_read_online(
+                        self.profile.online_ranges
+                    )
+                except IngeteamApiError as err:
+                    _LOGGER.debug("Live telemetry update failed: %s", err)
+                    online = {}
+            else:
+                # Read-only profiles never read or write holding registers.
+                holding = {}
+                try:
+                    online = await self.api.async_read_online(
+                        self.profile.online_ranges
+                    )
+                except IngeteamAuthError as err:
+                    raise ConfigEntryAuthFailed(str(err)) from err
+                except IngeteamApiError as err:
+                    raise UpdateFailed(str(err)) from err
             alarms, self.raw_alarms = decode_alarms(
-                online, self.api.capabilities, self.hass.config.language
+                online, self.api.capabilities, self.hass.config.language, fields
             )
             current = {(a["address"], a["bit"]): a for a in alarms}
             expected = {
-                address
-                for address in ALARM_FIELDS
-                if self.api.supports("online", address)
+                address for address in fields if self.api.supports("online", address)
             }
             valid_addresses = {
                 address
-                for address in ALARM_FIELDS
+                for address in fields
                 if raw_integer(online.get((address, 0))) is not None
             }
             self.missing_alarm_categories = [
-                ALARM_FIELDS[address] for address in sorted(expected - valid_addresses)
+                fields[address] for address in sorted(expected - valid_addresses)
             ]
             self.alarm_coverage_complete = (
                 bool(expected) and not self.missing_alarm_categories
@@ -126,10 +146,12 @@ class IngeteamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def async_write_many(self, values: list[tuple[int, int, int]]) -> None:
         """Read back every write without the polling refresh debounce."""
+        if not self.profile.writable:
+            raise HomeAssistantError("This inverter model is read-only")
         async with self._operation_lock:
             try:
                 await self.api.async_write_holding_values(values)
-                holding = await self.api.async_read_holding()
+                holding = await self.api.async_read_holding(self.profile.holding_ranges)
             except IngeteamApiError as err:
                 raise HomeAssistantError(str(err)) from err
             self.async_set_updated_data(

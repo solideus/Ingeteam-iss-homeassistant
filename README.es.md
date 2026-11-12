@@ -9,6 +9,20 @@ y credenciales. Conserva los controles, horarios, grupos, identificadores y
 precisión interna. No necesita Node-RED, MQTT ni servicios en la nube.
 No escribe parámetros durante la instalación.
 
+## Modelos compatibles
+
+El asistente pregunta la familia del inversor y propone la que indica su propio
+mapa (`/inverter/map`, `compatible.firmware`):
+
+| Perfil | Firmware del mapa | Alcance |
+|---|---|---|
+| **ISS** (predeterminado) | ABH1007AE | Monitorización y controles, como se describe abajo |
+| **INGECON SUN STORAGE 1Play** | ABH1002 | Experimental, monitorización **de solo lectura** |
+
+Las entradas existentes conservan el perfil ISS. El modelo se puede cambiar con
+*Reconfigurar*. El perfil 1Play no crea controles, porque muchos de sus
+registros tienen otro significado; consulta [STORAGE 1Play](docs/STORAGE_1PLAY.md).
+
 ## Requisitos y acceso
 
 - Home Assistant Core **2026.3.0 o posterior**.

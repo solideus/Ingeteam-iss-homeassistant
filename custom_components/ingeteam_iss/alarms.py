@@ -2,6 +2,7 @@
 
 from .sse import finite_number
 
+# ISS defaults; model profiles pass their own alarm fields.
 ALARM_FIELDS = {
     10: "inverter_alarm",
     12: "inverter_code_1",
@@ -53,10 +54,11 @@ def label_for(mapping: dict, address: int, code: int, language: str) -> str | No
 
 
 def decode_alarms(
-    online: dict, mapping: dict, language="en"
+    online: dict, mapping: dict, language="en", fields=None
 ) -> tuple[list[dict], dict]:
     alarms, raw = [], {}
-    for address, category in ALARM_FIELDS.items():
+    fields = ALARM_FIELDS if fields is None else fields
+    for address, category in fields.items():
         value = raw_integer(online.get((address, 0)))
         if value is None:
             continue

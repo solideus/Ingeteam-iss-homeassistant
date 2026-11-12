@@ -1,5 +1,24 @@
 # Registro de cambios
 
+## Sin publicar — Selector de modelo y perfil STORAGE 1Play
+
+- Añade un paso de modelo al alta, con el modelo detectado en el mapa del
+  inversor, y lo permite cambiar al reconfigurar. Las entradas existentes
+  conservan el perfil ISS sin cambios.
+- Nuevo perfil experimental de solo lectura para INGECON SUN STORAGE 1Play
+  (mapa ABH1002AL, tarjeta AAX0077, firmware AAX1055DC): decodifica
+  `/ems/sse/phases` sin fase 4 sumando las fases 1–3 y toma los estados de
+  `/ems/sse/stream`.
+- Expone todos los registros online del mapa 1Play con su escala (tensiones,
+  corrientes, frecuencias, temperaturas, aislamiento, SOH, estados) y decodifica
+  sus alarmas en sus propias direcciones; «conectado a red» usa el bit 0 del
+  estado del inversor (Modbus 30013).
+- El perfil 1Play no carga plataformas de control, no lee registros holding,
+  rechaza escrituras y elimina al arrancar los controles y las cadenas FV que
+  hubiera dejado una entrada ISS.
+- Pruebas con capturas reales del 1Play y documentación en
+  `docs/STORAGE_1PLAY.md`.
+
 ## 0.5.3 — Correcciones de balance horario y robustez
 
 - Cierra el balance neto a HH:59:55 y publica inmediatamente los acumulados,

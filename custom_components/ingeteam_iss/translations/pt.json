@@ -25,7 +25,8 @@
           "password": "Palavra-passe",
           "port": "Porta HTTP",
           "device_id": "ID do inversor",
-          "publish_interval": "Frequência de atualização"
+          "publish_interval": "Frequência de atualização",
+          "model": "Modelo"
         },
         "data_description": {
           "publish_interval": "SSE atualiza assim que chegam dados. Os outros intervalos limitam a publicação, não a receção nem o cálculo energético."
@@ -44,6 +45,16 @@
         },
         "data_description": {
           "publish_interval": "SSE atualiza assim que chegam dados. Os outros intervalos limitam a publicação, não a receção nem o cálculo energético."
+        }
+      },
+      "model": {
+        "title": "Modelo de inversor",
+        "description": "Detetado no mapa do inversor: {detected}. O perfil STORAGE 1Play é só de leitura: os seus registos têm outro significado, por isso não são criados controlos.",
+        "data": {
+          "model": "Modelo"
+        },
+        "data_description": {
+          "model": "Escolha a família do inversor ligado."
         }
       }
     },
@@ -249,6 +260,99 @@
           "connected": "Ligado",
           "disconnected": "Desligado"
         }
+      },
+      "battery_soh": {
+        "name": "Estado de saúde da bateria"
+      },
+      "battery_temperature": {
+        "name": "Temperatura da bateria"
+      },
+      "battery_max_charge_current": {
+        "name": "Corrente máx. de carga da bateria"
+      },
+      "battery_max_discharge_current": {
+        "name": "Corrente máx. de descarga da bateria"
+      },
+      "battery_charge_voltage": {
+        "name": "Tensão de carga da bateria"
+      },
+      "battery_discharge_voltage": {
+        "name": "Tensão de descarga da bateria"
+      },
+      "pv_voltage": {
+        "name": "Tensão FV"
+      },
+      "pv_current": {
+        "name": "Corrente FV"
+      },
+      "ac_loads_voltage": {
+        "name": "Tensão das cargas AC"
+      },
+      "ac_loads_current": {
+        "name": "Corrente das cargas AC"
+      },
+      "ac_loads_frequency": {
+        "name": "Frequência das cargas AC"
+      },
+      "ac_loads_power": {
+        "name": "Potência das cargas AC"
+      },
+      "ac_loads_reactive_power": {
+        "name": "Potência reativa das cargas AC"
+      },
+      "grid_voltage": {
+        "name": "Tensão da rede"
+      },
+      "grid_current": {
+        "name": "Corrente da rede"
+      },
+      "grid_frequency": {
+        "name": "Frequência da rede"
+      },
+      "grid_active_power": {
+        "name": "Potência ativa da rede (consultada)"
+      },
+      "grid_reactive_power": {
+        "name": "Potência reativa da rede"
+      },
+      "grid_power_factor": {
+        "name": "Fator de potência da rede"
+      },
+      "dc_bus_voltage": {
+        "name": "Tensão do barramento DC"
+      },
+      "residual_current": {
+        "name": "Corrente residual"
+      },
+      "heatsink_temperature": {
+        "name": "Temperatura do dissipador"
+      },
+      "electronics_temperature": {
+        "name": "Temperatura da eletrónica"
+      },
+      "pt100_temperature": {
+        "name": "Temperatura PT100"
+      },
+      "isolation_resistance_positive": {
+        "name": "Resistência de isolamento positiva"
+      },
+      "isolation_resistance_negative": {
+        "name": "Resistência de isolamento negativa"
+      },
+      "operation_time": {
+        "name": "Tempo de funcionamento"
+      },
+      "power_reduction_ratio": {
+        "name": "Rácio de redução de potência ativa"
+      },
+      "inverter_state": {
+        "name": "Estado do inversor"
+      },
+      "battery_state": {
+        "name": "Estado da bateria"
+      },
+      "power_reduction_reason": {
+        "name": "Motivo de redução de potência"
       }
     },
     "select": {
@@ -371,6 +475,12 @@
         "10": "A cada 10 segundos",
         "30": "A cada 30 segundos",
         "sse": "Tempo real — SSE (ritmo do inversor)"
+      }
+    },
+    "model": {
+      "options": {
+        "iss": "ISS (firmware de referência ABH1007AE) — monitorização e controlos",
+        "storage_1play": "INGECON SUN STORAGE 1Play (mapa ABH1002) — só monitorização"
       }
     }
   }

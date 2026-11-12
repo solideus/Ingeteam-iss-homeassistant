@@ -13,6 +13,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
@@ -27,10 +28,10 @@ from .const import (
     DEFAULT_PUBLISH_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SSE_TIMEOUT,
-    PLATFORMS,
 )
 from .coordinator import IngeteamCoordinator
 from .entity import inverter_device_info
+from .models import CONF_MODEL, MODEL_ISS
 
 type IngeteamConfigEntry = ConfigEntry[IngeteamCoordinator]
 
@@ -55,6 +56,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IngeteamConfigEntry) -> 
         config_entry=entry,
         time_zone=time_zone,
         sse_timeout=entry.options.get(CONF_SSE_TIMEOUT, DEFAULT_SSE_TIMEOUT),
+        # Entries created before model selection keep the ISS behaviour.
+        model=entry.data.get(CONF_MODEL, MODEL_ISS),
     )
     coordinator.telemetry.publish_interval = float(
         entry.options.get(
@@ -84,7 +87,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IngeteamConfigEntry) -> 
     )
     entry.runtime_data = coordinator
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    _async_remove_unsupported_entities(hass, entry, coordinator)
+    await hass.config_entries.async_forward_entry_setups(
+        entry, coordinator.profile.platforms
+    )
     entry.async_on_unload(
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, coordinator.telemetry.async_stop
@@ -92,6 +98,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: IngeteamConfigEntry) -> 
     )
     coordinator.telemetry.async_start()
     return True
+
+
+def _async_remove_unsupported_entities(
+    hass: HomeAssistant, entry: ConfigEntry, coordinator: IngeteamCoordinator
+) -> None:
+    """Drop entities a read-only profile never creates (e.g. ISS controls).
+
+    They would otherwise stay registered as unavailable controls that, on a
+    STORAGE 1Play, point at registers with a different meaning.
+    """
+    profile = coordinator.profile
+    if profile.writable:
+        return
+    registry = er.async_get(hass)
+    stale_suffixes = tuple(f"_{key}" for key in profile.retired_keys)
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if entity.domain not in profile.platforms or (
+            stale_suffixes and entity.unique_id.endswith(stale_suffixes)
+        ):
+            registry.async_remove(entity.entity_id)
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -107,7 +133,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: IngeteamConfigEntry) -> bool:
     """Unload a config entry."""
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+    platforms = entry.runtime_data.profile.platforms
+    if not await hass.config_entries.async_unload_platforms(entry, platforms):
         return False
     await entry.runtime_data.telemetry.async_stop()
     return True

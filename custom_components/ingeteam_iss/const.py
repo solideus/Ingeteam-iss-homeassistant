@@ -16,6 +16,7 @@ ENERGY_PUBLISH_INTERVAL = 30
 NET_CLOSE_OFFSET = 5
 SSE_PATH = "/system/events/sse/stream"
 SSE_PHASE_EVENT = "/ems/sse/phases"
+SSE_STREAM_EVENT = "/ems/sse/stream"
 
 CONF_DEVICE_ID = "device_id"
 CONF_SCAN_INTERVAL = "scan_interval"

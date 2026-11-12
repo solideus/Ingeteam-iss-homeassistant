@@ -33,13 +33,27 @@ from .const import (
     DEFAULT_SSE_TIMEOUT,
     DOMAIN,
 )
+from .models import CONF_MODEL, MODEL_ISS, PROFILES, detect_model, get_profile
 from .values import bounded_integer
+
+
+async def _async_validate_model(api: IngeteamApi, model: str) -> bool:
+    """A profile is usable when the registers it reads answer."""
+    profile = get_profile(model)
+    if profile.writable:
+        return bool(await api.async_read_holding(profile.holding_ranges))
+    return bool(await api.async_read_online(profile.online_ranges))
 
 
 class IngeteamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle the Ingeteam ISS setup flow."""
 
     VERSION = 2
+
+    def __init__(self) -> None:
+        self._pending: dict[str, Any] = {}
+        self._api: IngeteamApi | None = None
+        self._serial: str = ""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -71,11 +85,7 @@ class IngeteamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     device_id=user_input[CONF_DEVICE_ID],
                 )
                 info = await api.async_device_info()
-                holding = await api.async_read_holding()
-                if not holding:
-                    raise IngeteamConnectionError(
-                        "No supported inverter registers returned"
-                    )
+                await api.async_load_capabilities()
             except IngeteamAuthError:
                 errors["base"] = "invalid_auth"
             except IngeteamConnectionError:
@@ -92,12 +102,53 @@ class IngeteamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input["identity"] = serial
                 if info.get("SerialNumber"):
                     user_input["device_serial"] = str(info["SerialNumber"])
-                return self.async_create_entry(
-                    title=f"Ingeteam ISS {serial}", data=user_input
-                )
+                self._pending = user_input
+                self._api = api
+                self._serial = serial
+                return await self.async_step_model()
 
         return self.async_show_form(
             step_id="user", data_schema=_user_schema(), errors=errors
+        )
+
+    async def async_step_model(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Choose the inverter family; the device map suggests the default."""
+        errors: dict[str, str] = {}
+        assert self._api is not None
+        detected = detect_model(self._api.capabilities)
+        if user_input is not None:
+            model = user_input[CONF_MODEL]
+            try:
+                usable = await _async_validate_model(self._api, model)
+            except IngeteamAuthError:
+                errors["base"] = "invalid_auth"
+            except IngeteamConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception:  # Home Assistant shows a generic setup error.
+                errors["base"] = "unknown"
+            else:
+                if not usable:
+                    errors["base"] = "unsupported_device"
+                else:
+                    return self.async_create_entry(
+                        title=f"Ingeteam ISS {self._serial}",
+                        data={**self._pending, CONF_MODEL: model},
+                    )
+        return self.async_show_form(
+            step_id="model",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_MODEL, default=detected or MODEL_ISS
+                    ): _model_selector()
+                }
+            ),
+            description_placeholders={
+                "detected": detected or "-",
+            },
+            errors=errors,
         )
 
     @staticmethod
@@ -148,8 +199,9 @@ class IngeteamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     device_id=candidate[CONF_DEVICE_ID],
                 )
                 info = await api.async_device_info()
-                holding = await api.async_read_holding()
-                if not holding:
+                await api.async_load_capabilities()
+                candidate.setdefault(CONF_MODEL, MODEL_ISS)
+                if not await _async_validate_model(api, candidate[CONF_MODEL]):
                     errors["base"] = "unsupported_device"
                 elif (entry.data.get("device_serial") or entry.unique_id) not in (
                     None,
@@ -213,6 +265,14 @@ class IngeteamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             ),
         }
+        if step == "reconfigure":
+            # Lets entries created before model selection choose their family.
+            fields = {
+                vol.Required(
+                    CONF_MODEL, default=defaults.get(CONF_MODEL, MODEL_ISS)
+                ): _model_selector(),
+                **fields,
+            }
         return self.async_show_form(
             step_id=step, data_schema=vol.Schema(fields), errors=errors
         )
@@ -290,4 +350,10 @@ def _frequency_selector():
         SelectSelectorConfig(
             options=["sse", "5", "10", "30"], translation_key="publish_interval"
         )
+    )
+
+
+def _model_selector():
+    return SelectSelector(
+        SelectSelectorConfig(options=list(PROFILES), translation_key="model")
     )

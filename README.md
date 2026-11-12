@@ -24,6 +24,20 @@ No cloud, MQTT broker or Node-RED is required. Setup never writes inverter setti
 See [0.5.3 upgrade and validation](docs/VERSION_0.5.3.md). Existing statistics
 are not shifted retroactively; physical testing on the inverter remains needed.
 
+## Supported models
+
+The setup flow asks for the inverter family and suggests it from the device's
+own map (`/inverter/map`, `compatible.firmware`):
+
+| Profile | Map firmware | Scope |
+|---|---|---|
+| **ISS** (default) | ABH1007AE | Monitoring and controls, as documented below |
+| **INGECON SUN STORAGE 1Play** | ABH1002 | Experimental, **read-only** monitoring |
+
+Existing entries keep the ISS profile. The model can be changed with
+*Reconfigure*. The 1Play profile creates no controls, because many of its
+registers mean something different; see [STORAGE 1Play](docs/STORAGE_1PLAY.md).
+
 ## Requirements
 
 - Home Assistant Core **2026.3.0 or later**.

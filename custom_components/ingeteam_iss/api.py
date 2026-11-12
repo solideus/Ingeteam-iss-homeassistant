@@ -171,21 +171,25 @@ class IngeteamApi:
         except (ValueError, UnicodeError) as err:
             raise IngeteamApiError("Invalid SSE framing") from err
 
-    async def async_read_holding(self) -> dict[tuple[int, int], Any]:
+    async def async_read_holding(
+        self, ranges=HOLDING_RANGES
+    ) -> dict[tuple[int, int], Any]:
         """Read the selected EMS holding registers."""
         response = await self._request_json(
             "POST",
             f"/inverter/holding/read/{self.device_id}",
-            self.ranges("holding", HOLDING_RANGES),
+            self.ranges("holding", ranges),
         )
         return self._flatten_register_response(response)
 
-    async def async_read_online(self) -> dict[tuple[int, int], Any]:
+    async def async_read_online(
+        self, ranges=ONLINE_RANGES
+    ) -> dict[tuple[int, int], Any]:
         """Read selected live inverter values."""
         response = await self._request_json(
             "POST",
             f"/inverter/online/read/{self.device_id}",
-            self.ranges("online", ONLINE_RANGES),
+            self.ranges("online", ranges),
         )
         return self._flatten_register_response(response)
 

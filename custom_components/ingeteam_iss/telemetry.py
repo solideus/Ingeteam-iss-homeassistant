@@ -68,6 +68,10 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.disconnect_reason: str | None = None
         self.mean_interval: float | None = None
         self.missing_fields: list[str] = []
+        # Model profile hooks; the defaults are the original ISS behaviour.
+        self.decode_telemetry = decode_telemetry
+        self.decode_stream = None
+        self._stream_state: dict[str, float] = {}
         self._cancel_tick = None
         self._cancel_net_close = None
         self._store: Store = Store(
@@ -206,6 +210,7 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.energy.break_interval()
         self.accounting.break_interval()
         self.latest_sample = {}
+        self._stream_state = {}
         self.async_set_updated_data({})
 
     async def _run(self) -> None:
@@ -222,7 +227,23 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                             self.connections += 1
                             async for event in events:
                                 self.last_received = dt_util.utcnow()
-                                sample = decode_telemetry(event)
+                                if self.decode_stream is not None:
+                                    status = self.decode_stream(event)
+                                    if status is not None:
+                                        # Status codes complement the next phase
+                                        # sample; they are not fresh power data.
+                                        self._stream_state.update(status)
+                                        continue
+                                sample = self.decode_telemetry(event)
+                                if sample is not None and self._stream_state:
+                                    sample = {
+                                        **sample,
+                                        **{
+                                            key: value
+                                            for key, value in self._stream_state.items()
+                                            if sample.get(key) is None
+                                        },
+                                    }
                                 if sample is None:
                                     self.discarded_frames += 1
                                     if event.event == SSE_PHASE_EVENT:

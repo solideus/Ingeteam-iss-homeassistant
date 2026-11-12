@@ -3,6 +3,7 @@
 from homeassistant.util import dt as dt_util
 
 from .const import REFERENCE_FIRMWARE
+from .models import detect_model, map_firmware
 
 
 def telemetry_diagnostics(telemetry) -> dict:
@@ -35,7 +36,11 @@ async def async_get_config_entry_diagnostics(hass, entry) -> dict:
     owner = entry.runtime_data
     return {
         "reference_firmware": REFERENCE_FIRMWARE,
+        "model": owner.profile.key,
+        "map_firmware": map_firmware(owner.api.capabilities),
+        "detected_model": detect_model(owner.api.capabilities),
         "reported_portal_version": owner.device_info.get("Version"),
+        "reported_hardware": owner.device_info.get("HwType"),
         "capability_map_available": bool(owner.api.capabilities),
         "holding_fields_available": len((owner.data or {}).get("holding", {})),
         "telemetry": telemetry_diagnostics(owner.telemetry),

@@ -25,7 +25,8 @@
           "password": "Wachtwoord",
           "port": "HTTP-poort",
           "device_id": "Omvormer-ID",
-          "publish_interval": "Updatefrequentie"
+          "publish_interval": "Updatefrequentie",
+          "model": "Model"
         },
         "data_description": {
           "publish_interval": "SSE werkt bij zodra gegevens binnenkomen. Andere intervallen beperken alleen publicatie, niet ontvangst of energieberekening."
@@ -44,6 +45,16 @@
         },
         "data_description": {
           "publish_interval": "SSE werkt bij zodra gegevens binnenkomen. Andere intervallen beperken alleen publicatie, niet ontvangst of energieberekening."
+        }
+      },
+      "model": {
+        "title": "Omvormermodel",
+        "description": "Gedetecteerd in de omvormermap: {detected}. Het profiel STORAGE 1Play is alleen-lezen: de registers hebben een andere betekenis, dus er worden geen bedieningselementen aangemaakt.",
+        "data": {
+          "model": "Model"
+        },
+        "data_description": {
+          "model": "Kies de familie van de aangesloten omvormer."
         }
       }
     },
@@ -249,6 +260,99 @@
           "connected": "Verbonden",
           "disconnected": "Verbinding verbroken"
         }
+      },
+      "battery_soh": {
+        "name": "Gezondheid van de batterij"
+      },
+      "battery_temperature": {
+        "name": "Batterijtemperatuur"
+      },
+      "battery_max_charge_current": {
+        "name": "Max. laadstroom batterij"
+      },
+      "battery_max_discharge_current": {
+        "name": "Max. ontlaadstroom batterij"
+      },
+      "battery_charge_voltage": {
+        "name": "Laadspanning batterij"
+      },
+      "battery_discharge_voltage": {
+        "name": "Ontlaadspanning batterij"
+      },
+      "pv_voltage": {
+        "name": "PV-spanning"
+      },
+      "pv_current": {
+        "name": "PV-stroom"
+      },
+      "ac_loads_voltage": {
+        "name": "Spanning AC-verbruikers"
+      },
+      "ac_loads_current": {
+        "name": "Stroom AC-verbruikers"
+      },
+      "ac_loads_frequency": {
+        "name": "Frequentie AC-verbruikers"
+      },
+      "ac_loads_power": {
+        "name": "Vermogen AC-verbruikers"
+      },
+      "ac_loads_reactive_power": {
+        "name": "Blindvermogen AC-verbruikers"
+      },
+      "grid_voltage": {
+        "name": "Netspanning"
+      },
+      "grid_current": {
+        "name": "Netstroom"
+      },
+      "grid_frequency": {
+        "name": "Netfrequentie"
+      },
+      "grid_active_power": {
+        "name": "Actief netvermogen (opgevraagd)"
+      },
+      "grid_reactive_power": {
+        "name": "Blindvermogen net"
+      },
+      "grid_power_factor": {
+        "name": "Arbeidsfactor net"
+      },
+      "dc_bus_voltage": {
+        "name": "DC-busspanning"
+      },
+      "residual_current": {
+        "name": "Lekstroom"
+      },
+      "heatsink_temperature": {
+        "name": "Koellichaamtemperatuur"
+      },
+      "electronics_temperature": {
+        "name": "Temperatuur elektronica"
+      },
+      "pt100_temperature": {
+        "name": "PT100-temperatuur"
+      },
+      "isolation_resistance_positive": {
+        "name": "Positieve isolatieweerstand"
+      },
+      "isolation_resistance_negative": {
+        "name": "Negatieve isolatieweerstand"
+      },
+      "operation_time": {
+        "name": "Bedrijfstijd"
+      },
+      "power_reduction_ratio": {
+        "name": "Reductie actief vermogen"
+      },
+      "inverter_state": {
+        "name": "Omvormerstatus"
+      },
+      "battery_state": {
+        "name": "Batterijstatus"
+      },
+      "power_reduction_reason": {
+        "name": "Reden vermogensreductie"
       }
     },
     "select": {
@@ -371,6 +475,12 @@
         "10": "Elke 10 seconden",
         "30": "Elke 30 seconden",
         "sse": "Realtime — SSE (ritme van de omvormer)"
+      }
+    },
+    "model": {
+      "options": {
+        "iss": "ISS (referentiefirmware ABH1007AE) — bewaking en bediening",
+        "storage_1play": "INGECON SUN STORAGE 1Play (map ABH1002) — alleen bewaking"
       }
     }
   }

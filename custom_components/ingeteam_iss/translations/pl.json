@@ -25,7 +25,8 @@
           "password": "Hasło",
           "port": "Port HTTP",
           "device_id": "ID falownika",
-          "publish_interval": "Częstotliwość aktualizacji"
+          "publish_interval": "Częstotliwość aktualizacji",
+          "model": "Model"
         },
         "data_description": {
           "publish_interval": "SSE aktualizuje po otrzymaniu danych. Inne interwały ograniczają publikację, a nie odbiór ani obliczenia energii."
@@ -44,6 +45,16 @@
         },
         "data_description": {
           "publish_interval": "SSE aktualizuje po otrzymaniu danych. Inne interwały ograniczają publikację, a nie odbiór ani obliczenia energii."
+        }
+      },
+      "model": {
+        "title": "Model falownika",
+        "description": "Wykryto na mapie falownika: {detected}. Profil STORAGE 1Play jest tylko do odczytu: jego rejestry mają inne znaczenie, więc nie są tworzone żadne elementy sterujące.",
+        "data": {
+          "model": "Model"
+        },
+        "data_description": {
+          "model": "Wybierz rodzinę podłączonego falownika."
         }
       }
     },
@@ -249,6 +260,99 @@
           "connected": "Połączono",
           "disconnected": "Rozłączono"
         }
+      },
+      "battery_soh": {
+        "name": "Stan zdrowia akumulatora"
+      },
+      "battery_temperature": {
+        "name": "Temperatura akumulatora"
+      },
+      "battery_max_charge_current": {
+        "name": "Maks. prąd ładowania akumulatora"
+      },
+      "battery_max_discharge_current": {
+        "name": "Maks. prąd rozładowania akumulatora"
+      },
+      "battery_charge_voltage": {
+        "name": "Napięcie ładowania akumulatora"
+      },
+      "battery_discharge_voltage": {
+        "name": "Napięcie rozładowania akumulatora"
+      },
+      "pv_voltage": {
+        "name": "Napięcie PV"
+      },
+      "pv_current": {
+        "name": "Prąd PV"
+      },
+      "ac_loads_voltage": {
+        "name": "Napięcie odbiorów AC"
+      },
+      "ac_loads_current": {
+        "name": "Prąd odbiorów AC"
+      },
+      "ac_loads_frequency": {
+        "name": "Częstotliwość odbiorów AC"
+      },
+      "ac_loads_power": {
+        "name": "Moc odbiorów AC"
+      },
+      "ac_loads_reactive_power": {
+        "name": "Moc bierna odbiorów AC"
+      },
+      "grid_voltage": {
+        "name": "Napięcie sieci"
+      },
+      "grid_current": {
+        "name": "Prąd sieci"
+      },
+      "grid_frequency": {
+        "name": "Częstotliwość sieci"
+      },
+      "grid_active_power": {
+        "name": "Moc czynna sieci (odpytywana)"
+      },
+      "grid_reactive_power": {
+        "name": "Moc bierna sieci"
+      },
+      "grid_power_factor": {
+        "name": "Współczynnik mocy sieci"
+      },
+      "dc_bus_voltage": {
+        "name": "Napięcie szyny DC"
+      },
+      "residual_current": {
+        "name": "Prąd upływu"
+      },
+      "heatsink_temperature": {
+        "name": "Temperatura radiatora"
+      },
+      "electronics_temperature": {
+        "name": "Temperatura elektroniki"
+      },
+      "pt100_temperature": {
+        "name": "Temperatura PT100"
+      },
+      "isolation_resistance_positive": {
+        "name": "Dodatnia rezystancja izolacji"
+      },
+      "isolation_resistance_negative": {
+        "name": "Ujemna rezystancja izolacji"
+      },
+      "operation_time": {
+        "name": "Czas pracy"
+      },
+      "power_reduction_ratio": {
+        "name": "Współczynnik ograniczenia mocy czynnej"
+      },
+      "inverter_state": {
+        "name": "Stan falownika"
+      },
+      "battery_state": {
+        "name": "Stan akumulatora"
+      },
+      "power_reduction_reason": {
+        "name": "Przyczyna ograniczenia mocy"
       }
     },
     "select": {
@@ -371,6 +475,12 @@
         "10": "Co 10 sekund",
         "30": "Co 30 sekund",
         "sse": "Na bieżąco — SSE (rytm falownika)"
+      }
+    },
+    "model": {
+      "options": {
+        "iss": "ISS (firmware referencyjny ABH1007AE) — monitorowanie i sterowanie",
+        "storage_1play": "INGECON SUN STORAGE 1Play (mapa ABH1002) — tylko monitorowanie"
       }
     }
   }

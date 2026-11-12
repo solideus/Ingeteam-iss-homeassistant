@@ -18,18 +18,23 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfFrequency,
     UnitOfPower,
+    UnitOfReactivePower,
+    UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .accounting import ACCOUNTING_KEYS
-from .alarms import flow_state
+from .alarms import flow_state, label_for, raw_integer
 from .const import ENERGY_PUBLISH_INTERVAL, GROUP_ENERGY, Register
 from .coordinator import IngeteamCoordinator
 from .diagnostics import telemetry_diagnostics
 from .energy import ENERGY_SOURCES
 from .entity import IngeteamEntity
+from .models import MODEL_STORAGE_1PLAY
 from .values import scaled_sum
 
 
@@ -40,6 +45,8 @@ class IngeteamSensorDescription(SensorEntityDescription):
     register: Register = Register(0)
     divisor: float = 1.0
     sse: bool = True
+    # Gate the reading on a valid battery status (ISS battery current).
+    needs_battery: bool = False
 
 
 def power_description(
@@ -79,6 +86,7 @@ SENSORS: tuple[IngeteamSensorDescription, ...] = (
         register=Register(18),
         divisor=100,
         sse=False,
+        needs_battery=True,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -93,6 +101,173 @@ SENSORS: tuple[IngeteamSensorDescription, ...] = (
     power_description("battery_discharge_power"),
 )
 
+# SSE readings shared by every model (same keys, so same unique IDs).
+_COMMON_SSE_KEYS = (
+    "pv_total_power",
+    "battery_soc",
+    "battery_power",
+    "battery_voltage",
+    "total_load_power",
+    "external_grid_power",
+    "grid_import_power",
+    "grid_export_power",
+    "battery_charge_power",
+    "battery_discharge_power",
+)
+
+
+def online_description(
+    key: str,
+    address: int,
+    divisor: float,
+    unit: str | None,
+    device_class: SensorDeviceClass | None,
+    *,
+    diagnostic: bool = False,
+    enabled: bool = True,
+    state_class: SensorStateClass | None = SensorStateClass.MEASUREMENT,
+) -> IngeteamSensorDescription:
+    """One scaled online register of the STORAGE 1Play map.
+
+    Divisors follow the map's ``sc`` field: value = raw * sc / 100000.
+    """
+    return IngeteamSensorDescription(
+        key=key,
+        translation_key=key,
+        register=Register(address),
+        divisor=divisor,
+        sse=False,
+        native_unit_of_measurement=unit,
+        device_class=device_class,
+        state_class=state_class,
+        entity_category=EntityCategory.DIAGNOSTIC if diagnostic else None,
+        entity_registry_enabled_default=enabled,
+    )
+
+
+_V = UnitOfElectricPotential.VOLT
+_A = UnitOfElectricCurrent.AMPERE
+_W = UnitOfPower.WATT
+_HZ = UnitOfFrequency.HERTZ
+_C = UnitOfTemperature.CELSIUS
+_VAR = UnitOfReactivePower.VOLT_AMPERE_REACTIVE
+_SDC = SensorDeviceClass
+
+STORAGE_1PLAY_SENSORS: tuple[IngeteamSensorDescription, ...] = (
+    *(desc for desc in SENSORS if desc.key in _COMMON_SSE_KEYS),
+    online_description("battery_current", 15, 100, _A, _SDC.CURRENT),
+    online_description("battery_soh", 18, 1, PERCENTAGE, None),
+    online_description("battery_temperature", 22, 10, _C, _SDC.TEMPERATURE),
+    online_description(
+        "battery_max_charge_current", 19, 100, _A, _SDC.CURRENT, diagnostic=True
+    ),
+    online_description(
+        "battery_max_discharge_current", 20, 100, _A, _SDC.CURRENT, diagnostic=True
+    ),
+    online_description(
+        "battery_charge_voltage", 52, 10, _V, _SDC.VOLTAGE, diagnostic=True
+    ),
+    online_description(
+        "battery_discharge_voltage", 53, 10, _V, _SDC.VOLTAGE, diagnostic=True
+    ),
+    online_description("pv_voltage", 23, 1, _V, _SDC.VOLTAGE),
+    online_description("pv_current", 24, 100, _A, _SDC.CURRENT),
+    online_description("ac_loads_voltage", 26, 1, _V, _SDC.VOLTAGE),
+    online_description("ac_loads_current", 27, 100, _A, _SDC.CURRENT),
+    online_description("ac_loads_frequency", 28, 100, _HZ, _SDC.FREQUENCY),
+    online_description("ac_loads_power", 29, 1, _W, _SDC.POWER),
+    online_description(
+        "ac_loads_reactive_power",
+        30,
+        1,
+        _VAR,
+        _SDC.REACTIVE_POWER,
+        diagnostic=True,
+        enabled=False,
+    ),
+    online_description("grid_voltage", 34, 1, _V, _SDC.VOLTAGE),
+    online_description("grid_current", 35, 100, _A, _SDC.CURRENT),
+    online_description("grid_frequency", 36, 100, _HZ, _SDC.FREQUENCY),
+    online_description("grid_active_power", 37, 1, _W, _SDC.POWER),
+    online_description(
+        "grid_reactive_power",
+        38,
+        1,
+        _VAR,
+        _SDC.REACTIVE_POWER,
+        diagnostic=True,
+        enabled=False,
+    ),
+    online_description(
+        "grid_power_factor",
+        54,
+        1000,
+        None,
+        _SDC.POWER_FACTOR,
+        diagnostic=True,
+        enabled=False,
+    ),
+    online_description("dc_bus_voltage", 39, 1, _V, _SDC.VOLTAGE, diagnostic=True),
+    online_description(
+        "residual_current",
+        48,
+        1,
+        UnitOfElectricCurrent.MILLIAMPERE,
+        _SDC.CURRENT,
+        diagnostic=True,
+    ),
+    online_description("heatsink_temperature", 40, 10, _C, _SDC.TEMPERATURE),
+    online_description(
+        "electronics_temperature", 41, 10, _C, _SDC.TEMPERATURE, diagnostic=True
+    ),
+    online_description(
+        "pt100_temperature",
+        42,
+        10,
+        _C,
+        _SDC.TEMPERATURE,
+        diagnostic=True,
+        enabled=False,
+    ),
+    online_description(
+        "isolation_resistance_positive",
+        43,
+        1,
+        "kΩ",
+        None,
+        diagnostic=True,
+        enabled=False,
+    ),
+    online_description(
+        "isolation_resistance_negative",
+        44,
+        1,
+        "kΩ",
+        None,
+        diagnostic=True,
+        enabled=False,
+    ),
+    online_description(
+        "operation_time",
+        6,
+        1,
+        UnitOfTime.HOURS,
+        _SDC.DURATION,
+        diagnostic=True,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    online_description(
+        "power_reduction_ratio", 60, 10, PERCENTAGE, None, diagnostic=True
+    ),
+)
+
+# Enumerated online registers shown with the labels of the device's own map.
+STORAGE_1PLAY_STATES = (
+    ("inverter_state", 12, False),
+    ("battery_state", 21, False),
+    ("power_reduction_reason", 59, True),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -101,9 +276,25 @@ async def async_setup_entry(
 ) -> None:
     """Preserve all old unique IDs; add only energy-related/diagnostic entities."""
     owner = entry.runtime_data
+    storage_1play = owner.profile.key == MODEL_STORAGE_1PLAY
+    descriptions = STORAGE_1PLAY_SENSORS if storage_1play else SENSORS
     async_add_entities(
         [
-            *(IngeteamSensor(owner, desc) for desc in SENSORS),
+            *(
+                IngeteamSensor(owner, desc)
+                for desc in descriptions
+                # The ISS entity set is unchanged; 1Play follows its own map.
+                if not storage_1play
+                or desc.sse
+                or owner.api.supports("online", desc.register.address)
+            ),
+            *(
+                IngeteamMapStateSensor(owner, key, address, diagnostic)
+                for key, address, diagnostic in (
+                    STORAGE_1PLAY_STATES if storage_1play else ()
+                )
+                if owner.api.supports("online", address)
+            ),
             *(IngeteamEnergySensor(owner, key) for key in ENERGY_SOURCES),
             *(IngeteamCalendarSensor(owner, key) for key in ACCOUNTING_KEYS),
             IngeteamFlowSensor(owner, "grid_flow", ["importing", "exporting", "idle"]),
@@ -137,7 +328,7 @@ class IngeteamSensor(IngeteamEntity, SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
-        if self.entity_description.key == "battery_current":
+        if self.entity_description.needs_battery:
             self.async_on_remove(
                 self.owner.telemetry.async_add_listener(self._handle_coordinator_update)
             )
@@ -157,7 +348,7 @@ class IngeteamSensor(IngeteamEntity, SensorEntity):
             )
         if not self.owner.last_update_success:
             return None
-        if self.entity_description.key == "battery_current" and (
+        if self.entity_description.needs_battery and (
             not self.owner.telemetry.connected
             or self.owner.telemetry.data.get("battery_status") in (None, 7)
         ):
@@ -344,3 +535,40 @@ class IngeteamSSEDiagnostics(IngeteamEntity, SensorEntity):
     @property
     def extra_state_attributes(self):
         return telemetry_diagnostics(self.coordinator)
+
+
+class IngeteamMapStateSensor(IngeteamEntity, SensorEntity):
+    """Enumerated register shown with the label declared by the device map."""
+
+    _attr_icon = "mdi:information-outline"
+
+    def __init__(self, owner, key, address, diagnostic):
+        super().__init__(owner, Register(address))
+        self._attr_unique_id = f"{self._serial}_{key}"
+        self._attr_translation_key = key
+        if diagnostic:
+            self._attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    @property
+    def available(self):
+        return self.coordinator.last_update_success and self._code() is not None
+
+    def _code(self):
+        return raw_integer(self._register_value("online"))
+
+    @property
+    def native_value(self):
+        code = self._code()
+        if code is None:
+            return None
+        label = label_for(
+            self.coordinator.api.capabilities,
+            self.register.address,
+            code,
+            self.coordinator.hass.config.language,
+        )
+        return label or str(code)
+
+    @property
+    def extra_state_attributes(self):
+        return {"code": self._code()}

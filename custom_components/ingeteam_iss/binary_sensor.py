@@ -13,6 +13,7 @@ from .alarms import raw_integer
 from .const import Register
 from .coordinator import IngeteamCoordinator
 from .entity import IngeteamEntity
+from .models import MODEL_STORAGE_1PLAY
 
 
 async def async_setup_entry(
@@ -56,8 +57,15 @@ class IngeteamSSEConnectivity(IngeteamEntity, BinarySensorEntity):
 
 class IngeteamOperatingState(IngeteamEntity, BinarySensorEntity):
     def __init__(self, owner, key):
+        # STORAGE 1Play: "connected to the grid" is bit 0 of the polled
+        # Inverter Status register (Modbus 30013), not an SSE status code.
+        self._status_bit = (
+            key == "grid_connected" and owner.profile.key == MODEL_STORAGE_1PLAY
+        )
         super().__init__(
-            owner.telemetry if key in ("pv_active", "grid_connected") else owner,
+            owner.telemetry
+            if key == "pv_active" or (key == "grid_connected" and not self._status_bit)
+            else owner,
             Register(0),
         )
         self._key = key
@@ -81,6 +89,9 @@ class IngeteamOperatingState(IngeteamEntity, BinarySensorEntity):
         if self._key == "pv_active":
             power = data.get("pv_total_power")
             return power > 10 if power is not None else None
+        if self._key == "grid_connected" and self._status_bit:
+            status = raw_integer(data.get("online", {}).get((12, 0)))
+            return bool(status & 1) if status is not None else None
         if self._key == "grid_connected":
             status = data.get("inverter_status")
             return True if status in (3, 4, 8) else False if status in (2, 11) else None
@@ -88,7 +99,10 @@ class IngeteamOperatingState(IngeteamEntity, BinarySensorEntity):
             if self.coordinator.alarms:
                 return True
             return False if self.coordinator.alarm_coverage_complete else None
-        reason = raw_integer(data.get("online", {}).get((41, 0)))
+        register = self.coordinator.profile.power_reduction_register
+        if register is None:
+            return None
+        reason = raw_integer(data.get("online", {}).get((register, 0)))
         return reason != 0 if reason is not None else None
 
     @property
