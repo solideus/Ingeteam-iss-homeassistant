@@ -715,6 +715,20 @@
      "03": "L-225",
      "04": "L-226"
     }
+   },
+   "CSTM__27": {
+    "btype": "ushort",
+    "values": {
+     "00": "L-494",
+     "01": "L-495"
+    }
+   },
+   "CSTM__F": {
+    "btype": "ushort",
+    "values": {
+     "00": "L-270",
+     "01": "L-271"
+    }
    }
   },
   "langs": {
@@ -1053,7 +1067,11 @@
     "L-559": "Timeout for Grid Support : Mode",
     "L-561": "Timeout for Grid Support : Limit [300ms - 32700ms]",
     "L-562": "Node ID for Modbus RTU",
-    "L-563": "Baud Rate for Modbus RTU"
+    "L-563": "Baud Rate for Modbus RTU",
+    "L-494": "First from PV, remaining from AC Grid",
+    "L-495": "Only from AC Grid",
+    "L-270": "Disabled",
+    "L-271": "Enabled"
    },
    "SPANISH": {
     "L-50": "Total operation time",
@@ -1390,7 +1408,11 @@
     "L-559": "Timeout for Grid Support : Mode",
     "L-561": "Timeout for Grid Support : Limit [300ms - 32700ms]",
     "L-562": "Node ID for Modbus RTU",
-    "L-563": "Baud Rate for Modbus RTU"
+    "L-563": "Baud Rate for Modbus RTU",
+    "L-494": "First from PV, remaining from AC Grid",
+    "L-495": "Only from AC Grid",
+    "L-270": "Disabled",
+    "L-271": "Enabled"
    }
   },
   "holding": [
