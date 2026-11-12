@@ -36,7 +36,8 @@ own map (`/inverter/map`, `compatible.firmware`):
 
 Existing entries keep the ISS profile. The model can be changed with
 *Reconfigure*. The 1Play profile does not create the ISS controls, because many of
-its registers mean something different; see [STORAGE 1Play](docs/STORAGE_1PLAY.md).
+its registers mean something different; see [STORAGE 1Play](docs/STORAGE_1PLAY.md)
+and its [validation record](docs/VALIDATION_STORAGE_1PLAY.md).
 
 ## Requirements
 

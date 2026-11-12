@@ -2,7 +2,8 @@
 
 Para las correcciones y pruebas de la versión actual, consulta
 [la validación de 0.5.3](VERSION_0.5.3.md). Los resultados siguientes documentan
-la validación histórica de 0.4.0.
+la validación histórica de 0.4.0. Las pruebas en un INGECON SUN STORAGE 1Play
+real están en [validación del 1Play](VALIDATION_STORAGE_1PLAY.md).
 
 ## Comprobación automatizada
 

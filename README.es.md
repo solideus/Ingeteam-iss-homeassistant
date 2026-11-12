@@ -21,7 +21,8 @@ mapa (`/inverter/map`, `compatible.firmware`):
 
 Las entradas existentes conservan el perfil ISS. El modelo se puede cambiar con
 *Reconfigurar*. El perfil 1Play no crea los controles del ISS, porque muchos de
-sus registros tienen otro significado; consulta [STORAGE 1Play](docs/STORAGE_1PLAY.md).
+sus registros tienen otro significado; consulta [STORAGE 1Play](docs/STORAGE_1PLAY.md) y
+su [validación](docs/VALIDATION_STORAGE_1PLAY.md).
 
 ## Requisitos y acceso
 

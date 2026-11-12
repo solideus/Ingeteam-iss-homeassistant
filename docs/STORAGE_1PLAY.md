@@ -116,6 +116,8 @@ Deliberately not exposed: operation mode (122), SOCdescx/SOCrecx (126/127,
 shutdown thresholds), the generator schedule (100.2, 110–113) and every grid
 protection, regulation, battery type and grid-quality setting.
 
+Full test record (in Spanish): [1Play validation](VALIDATION_STORAGE_1PLAY.md).
+
 ## Not covered yet
 
 - Energy counters are integrated from SSE power, as for the ISS; no 1Play
