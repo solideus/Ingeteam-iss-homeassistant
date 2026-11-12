@@ -130,6 +130,12 @@
       },
       "bms_max_on_grid_discharge_current": {
         "name": "Corriente máxima de descarga BMS en On-Grid"
+      },
+      "soc_grid": {
+        "name": "SOC máximo cargando desde red"
+      },
+      "max_grid_injection_power": {
+        "name": "Potencia máxima inyectada a red"
       }
     },
     "switch": {
@@ -141,6 +147,9 @@
       },
       "bms_soc_calibration": {
         "name": "Calibración del SOC cuando lo necesita el BMS"
+      },
+      "battery_backup": {
+        "name": "Backup de batería"
       }
     },
     "select": {
@@ -192,6 +201,13 @@
           "whole_week": "Toda la semana",
           "weekdays": "Lunes a viernes",
           "weekend": "Sábado y domingo"
+        }
+      },
+      "battery_charge_priority": {
+        "name": "Prioridad de carga de batería",
+        "state": {
+          "pv_then_grid": "Primero FV, el resto de red",
+          "grid_only": "Solo desde red"
         }
       }
     },

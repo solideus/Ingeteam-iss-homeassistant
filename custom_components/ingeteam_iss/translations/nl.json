@@ -130,6 +130,12 @@
       },
       "bms_max_on_grid_discharge_current": {
         "name": "Maximale BMS-ontlaadstroom bij netbedrijf"
+      },
+      "soc_grid": {
+        "name": "Max. SOC bij laden uit het net"
+      },
+      "max_grid_injection_power": {
+        "name": "Max. aan het net geleverd vermogen"
       }
     },
     "switch": {
@@ -141,6 +147,9 @@
       },
       "bms_soc_calibration": {
         "name": "SOC-kalibratie op verzoek van het BMS"
+      },
+      "battery_backup": {
+        "name": "Batterijback-up"
       }
     },
     "sensor": {
@@ -404,6 +413,13 @@
           "whole_week": "Hele week",
           "weekdays": "Maandag tot vrijdag",
           "weekend": "Zaterdag en zondag"
+        }
+      },
+      "battery_charge_priority": {
+        "name": "Laadprioriteit batterij",
+        "state": {
+          "pv_then_grid": "Eerst PV, rest uit het net",
+          "grid_only": "Alleen uit het net"
         }
       }
     },

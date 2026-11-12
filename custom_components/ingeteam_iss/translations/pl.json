@@ -130,6 +130,12 @@
       },
       "bms_max_on_grid_discharge_current": {
         "name": "Maksymalny prąd rozładowania BMS w trybie sieciowym"
+      },
+      "soc_grid": {
+        "name": "Maks. SOC przy ładowaniu z sieci"
+      },
+      "max_grid_injection_power": {
+        "name": "Maks. moc oddawana do sieci"
       }
     },
     "switch": {
@@ -141,6 +147,9 @@
       },
       "bms_soc_calibration": {
         "name": "Kalibracja SOC na żądanie BMS"
+      },
+      "battery_backup": {
+        "name": "Zasilanie awaryjne z akumulatora"
       }
     },
     "sensor": {
@@ -404,6 +413,13 @@
           "whole_week": "Cały tydzień",
           "weekdays": "Od poniedziałku do piątku",
           "weekend": "Sobota i niedziela"
+        }
+      },
+      "battery_charge_priority": {
+        "name": "Priorytet ładowania akumulatora",
+        "state": {
+          "pv_then_grid": "Najpierw PV, reszta z sieci",
+          "grid_only": "Tylko z sieci"
         }
       }
     },

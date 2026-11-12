@@ -46,8 +46,22 @@ STORAGE_1PLAY_ONLINE_RANGES = (
 
 # Only settings whose address, range and meaning are confirmed by the 1Play
 # map and validated with a write/readback on a real inverter.
-STORAGE_1PLAY_HOLDING_RANGES = ({"address": 123, "length": 1},)
-STORAGE_1PLAY_CONTROL_KEYS = ("soc_max",)
+STORAGE_1PLAY_HOLDING_RANGES = (
+    {"address": 116, "length": 1},
+    {"address": 123, "length": 3},
+    {"address": 128, "length": 2},
+    {"address": 132, "length": 1},
+)
+STORAGE_1PLAY_CONTROL_KEYS = (
+    "soc_max",
+    "soc_grid",
+    "soc_min",
+    "max_grid_charge_power",
+    "max_grid_injection_power",
+    "bms_max_charge_current",
+    "battery_charge_priority",
+    "battery_backup",
+)
 
 CONTROL_DOMAINS = ("number", "switch", "select", "time")
 
@@ -86,7 +100,7 @@ PROFILES: dict[str, ModelProfile] = {
     ),
     MODEL_STORAGE_1PLAY: ModelProfile(
         key=MODEL_STORAGE_1PLAY,
-        platforms=("sensor", "binary_sensor", "number"),
+        platforms=("sensor", "binary_sensor", "number", "switch", "select"),
         online_ranges=STORAGE_1PLAY_ONLINE_RANGES,
         holding_ranges=STORAGE_1PLAY_HOLDING_RANGES,
         control_keys=STORAGE_1PLAY_CONTROL_KEYS,

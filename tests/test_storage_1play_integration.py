@@ -183,13 +183,28 @@ def state(hass, domain, key):
 async def test_only_validated_controls_and_no_unrequested_writes(play):
     hass, entry, data = play
     entities = er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
-    assert {e.domain for e in entities} <= {"sensor", "binary_sensor", "number"}
-    numbers = {e.unique_id for e in entities if e.domain == "number"}
-    assert numbers == {f"{SERIAL}_soc_max"}
-    # Holding reads are limited to the validated register; setup never writes.
+    controls = {
+        e.unique_id.removeprefix(f"{SERIAL}_")
+        for e in entities
+        if e.domain in ("number", "switch", "select", "time")
+    }
+    assert controls == {
+        "soc_max",
+        "soc_grid",
+        "soc_min",
+        "max_grid_charge_power",
+        "max_grid_injection_power",
+        "bms_max_charge_current",
+        "battery_charge_priority",
+        "battery_backup",
+    }
+    # Holding reads are limited to the validated registers; setup never writes.
     holding_reads = [body for source, body in data["reads"] if source == "holding"]
     assert holding_reads
-    assert all(body == [{"address": 123, "length": 1}] for body in holding_reads)
+    expected = [
+        {"address": a, "length": 1} for a in (116, 123, 124, 125, 128, 129, 132)
+    ]
+    assert all(body == expected for body in holding_reads)
     assert data["writes"] == []
     keys = {e.unique_id.removeprefix(f"{SERIAL}_") for e in entities}
     assert "pv_1_power" not in keys and "pv_2_power" not in keys
@@ -206,6 +221,35 @@ async def test_soc_max_write_and_readback(play):
         {"address": 123, "startbit": 0, "value": 96}
     ]
     assert state(hass, "number", "soc_max").state == "96.0"
+
+
+async def test_1play_settings_write_their_own_registers(play):
+    hass, _, data = play
+    assert state(hass, "number", "max_grid_injection_power").state == "6000.0"
+    assert state(hass, "number", "bms_max_charge_current").state == "50.0"
+    assert state(hass, "switch", "battery_backup").state == "on"
+    assert state(hass, "select", "battery_charge_priority").state == "pv_then_grid"
+    calls = (
+        ("number", "set_value", "max_grid_injection_power", {"value": -1000}),
+        ("number", "set_value", "bms_max_charge_current", {"value": 49}),
+        ("switch", "turn_off", "battery_backup", {}),
+        ("select", "select_option", "battery_charge_priority", {"option": "grid_only"}),
+    )
+    for domain, service, key, extra in calls:
+        entity_id = state(hass, domain, key).entity_id
+        await hass.services.async_call(
+            domain, service, {"entity_id": entity_id, **extra}, blocking=True
+        )
+    assert [w["Values"] for w in data["writes"]] == [
+        [{"address": 129, "startbit": 0, "value": -1000}],
+        [{"address": 116, "startbit": 0, "value": 49}],
+        [{"address": 132, "startbit": 1, "value": 0}],
+        [{"address": 132, "startbit": 4, "value": 1}],
+    ]
+    # Bit fields of register 132 are independent.
+    assert state(hass, "switch", "battery_backup").state == "off"
+    assert state(hass, "select", "battery_charge_priority").state == "grid_only"
+    assert data["holding"][132, 5] == FIXTURE["holding"]["132.5"]
 
 
 async def test_sse_telemetry_with_stream_status(play):
@@ -258,13 +302,13 @@ async def test_stale_iss_entities_are_removed_on_setup(play):
     """Controls and PV strings left by an ISS-profile entry are dropped."""
     hass, entry, _ = play
     registry = er.async_get(hass)
-    for domain, key in (("number", "bms_max_charge_current"), ("sensor", "pv_2_power")):
+    for domain, key in (("number", "soc_recovery"), ("sensor", "pv_2_power")):
         registry.async_get_or_create(
             domain, DOMAIN, f"{SERIAL}_{key}", config_entry=entry
         )
     assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
-    for domain, key in (("number", "bms_max_charge_current"), ("sensor", "pv_2_power")):
+    for domain, key in (("number", "soc_recovery"), ("sensor", "pv_2_power")):
         assert registry.async_get_entity_id(domain, DOMAIN, f"{SERIAL}_{key}") is None
     assert registry.async_get_entity_id("sensor", DOMAIN, f"{SERIAL}_battery_soc")
     assert registry.async_get_entity_id("number", DOMAIN, f"{SERIAL}_soc_max")

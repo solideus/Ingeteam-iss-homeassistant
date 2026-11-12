@@ -120,27 +120,65 @@ def test_profiles():
     play = PROFILES[MODEL_STORAGE_1PLAY]
     assert iss.writable and "number" in iss.platforms
     assert play.writable
-    assert set(play.platforms) == {"sensor", "binary_sensor", "number"}
-    assert play.control_keys == ("soc_max",)
-    assert play.holding_ranges == ({"address": 123, "length": 1},)
+    assert set(play.platforms) == {
+        "sensor",
+        "binary_sensor",
+        "number",
+        "switch",
+        "select",
+    }
+    assert "time" not in play.platforms
+
+
+# Each enabled 1Play control and the label of its own map entry.
+EXPECTED_CONTROLS = {
+    "soc_max": (123, 0, "SOCmax"),
+    "soc_grid": (124, 0, "SOCgrid"),
+    "soc_min": (125, 0, "SOCmin"),
+    "max_grid_charge_power": (128, 0, "Maximum battery charging power from the grid"),
+    "max_grid_injection_power": (129, 0, "Maximum power injected to the grid"),
+    "bms_max_charge_current": (116, 0, "Maximum Charge Current"),
+    "battery_charge_priority": (132, 4, "Battery Charging Priority"),
+    "battery_backup": (132, 1, "Battery-Backup Function"),
+}
 
 
 def test_1play_controls_match_their_map_entries():
-    """Every enabled 1Play control is the same setting in the device map."""
+    """Every enabled 1Play control is the expected setting of the device map."""
     number = pytest.importorskip("custom_components.ingeteam_iss.number")
+    select = pytest.importorskip("custom_components.ingeteam_iss.select")
+    switch = pytest.importorskip("custom_components.ingeteam_iss.switch")
+    profile = PROFILES[MODEL_STORAGE_1PLAY]
+    assert set(profile.control_keys) == set(EXPECTED_CONTROLS)
     fields = {(f["add"], f.get("start", 0)): f for f in FIXTURE["map"]["holding"]}
-    for desc in number.NUMBERS:
-        if desc.key not in PROFILES[MODEL_STORAGE_1PLAY].control_keys:
-            continue
-        field = fields[desc.register.address, desc.register.startbit]
-        assert field["uw"] == 1
-        assert (field["min"], field["max"]) == (
-            desc.native_min_value,
-            desc.native_max_value,
-        )
+    labels = FIXTURE["map"]["langs"]["ENGLISH"]
+    descriptions = (
+        *number.STORAGE_1PLAY_NUMBERS,
+        *select.STORAGE_1PLAY_SELECTS,
+        *switch.STORAGE_1PLAY_SWITCHES,
+    )
+    assert {d.key for d in descriptions} == set(EXPECTED_CONTROLS)
+    read = {
+        address
+        for r in profile.holding_ranges
+        for address in range(r["address"], r["address"] + r["length"])
+    }
+    for desc in descriptions:
+        address, bit, label = EXPECTED_CONTROLS[desc.key]
+        assert (desc.register.address, desc.register.startbit) == (address, bit)
+        assert address in read, desc.key
+        field = fields[address, bit]
+        assert labels[field["tid"]].startswith(label), desc.key
         assert field["sc"] == 1
-        label = FIXTURE["map"]["langs"]["ENGLISH"].get(field["tid"], "")
-        assert label.startswith("SOCmax"), label
+        if hasattr(desc, "native_min_value"):
+            assert (field["min"], field["max"]) == (
+                desc.native_min_value,
+                desc.native_max_value,
+            ), desc.key
+    # Select options follow the map's custom type order (0, 1).
+    priority = select.STORAGE_1PLAY_SELECTS[0]
+    custom = FIXTURE["map"]["customtypes"][fields[132, 4]["ty"]]["values"]
+    assert len(priority.options) == len(custom)
 
 
 def test_1play_ranges_cover_every_online_register_of_the_map():

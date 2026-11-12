@@ -10,9 +10,15 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import GROUP_GRID_CHARGE, GROUP_SCHEDULED_DISCHARGE, Register
+from .const import (
+    GROUP_BATTERY,
+    GROUP_GRID_CHARGE,
+    GROUP_SCHEDULED_DISCHARGE,
+    Register,
+)
 from .coordinator import IngeteamCoordinator
 from .entity import IngeteamEntity
+from .models import MODEL_STORAGE_1PLAY
 from .values import register_integer
 
 BATTERY_USE_OPTIONS = ("self_consumption", "grid_injection")
@@ -78,6 +84,18 @@ SELECTS: tuple[IngeteamSelectDescription, ...] = (
     ),
 )
 
+# STORAGE 1Play holding 132 bit 4: "Battery Charging Priority".
+STORAGE_1PLAY_SELECTS: tuple[IngeteamSelectDescription, ...] = (
+    IngeteamSelectDescription(
+        key="battery_charge_priority",
+        translation_key="battery_charge_priority",
+        register=Register(132, 4),
+        group=GROUP_BATTERY,
+        options=("pv_then_grid", "grid_only"),
+        entity_category=EntityCategory.CONFIG,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -85,10 +103,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up battery-use selectors."""
+    profile = entry.runtime_data.profile
+    descriptions = (
+        STORAGE_1PLAY_SELECTS if profile.key == MODEL_STORAGE_1PLAY else SELECTS
+    )
     async_add_entities(
         IngeteamSelect(entry.runtime_data, desc)
-        for desc in SELECTS
-        if entry.runtime_data.api.supports(
+        for desc in descriptions
+        if (profile.control_keys is None or desc.key in profile.control_keys)
+        and entry.runtime_data.api.supports(
             "holding", desc.register.address, desc.register.startbit
         )
     )

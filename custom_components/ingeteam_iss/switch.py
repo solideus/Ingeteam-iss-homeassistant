@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import GROUP_BATTERY, GROUP_GRID_EXPORT, Register
 from .coordinator import IngeteamCoordinator
 from .entity import IngeteamEntity
+from .models import MODEL_STORAGE_1PLAY
 from .values import register_integer
 
 
@@ -49,6 +50,18 @@ SWITCHES: tuple[IngeteamSwitchDescription, ...] = (
     ),
 )
 
+# STORAGE 1Play holding 132 bit 1: "Battery-Backup Function: Mode".
+STORAGE_1PLAY_SWITCHES: tuple[IngeteamSwitchDescription, ...] = (
+    IngeteamSwitchDescription(
+        key="battery_backup",
+        translation_key="battery_backup",
+        register=Register(132, 1),
+        group=GROUP_BATTERY,
+        icon="mdi:home-battery",
+        entity_category=EntityCategory.CONFIG,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -56,10 +69,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up writable switches."""
+    profile = entry.runtime_data.profile
+    descriptions = (
+        STORAGE_1PLAY_SWITCHES if profile.key == MODEL_STORAGE_1PLAY else SWITCHES
+    )
     async_add_entities(
         IngeteamSwitch(entry.runtime_data, desc)
-        for desc in SWITCHES
-        if entry.runtime_data.api.supports(
+        for desc in descriptions
+        if (profile.control_keys is None or desc.key in profile.control_keys)
+        and entry.runtime_data.api.supports(
             "holding", desc.register.address, desc.register.startbit
         )
     )

@@ -32,7 +32,7 @@ own map (`/inverter/map`, `compatible.firmware`):
 | Profile | Map firmware | Scope |
 |---|---|---|
 | **ISS** (default) | ABH1007AE | Monitoring and controls, as documented below |
-| **INGECON SUN STORAGE 1Play** | ABH1002 | Experimental: monitoring plus settings validated on that model (SOCmax) |
+| **INGECON SUN STORAGE 1Play** | ABH1002 | Experimental: monitoring plus eight settings validated on that model (SOC limits, grid charge/injection power, BMS current, charge priority, battery backup) |
 
 Existing entries keep the ISS profile. The model can be changed with
 *Reconfigure*. The 1Play profile does not create the ISS controls, because many of

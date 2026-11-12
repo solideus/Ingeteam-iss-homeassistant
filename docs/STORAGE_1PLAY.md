@@ -95,10 +95,26 @@ Modbus document but not in the HTTP map, so they are not read.
 
 | Holding | Map entry | Entity | Range | Validation |
 |---|---|---|---|---|
-| 123 | *SOCmax: Maximum charge limit of renewable source (%)*, `sc` 1 | `number` `soc_max` | 0–100 % | 95 → 96 → 95 on a real 1Play: write confirmed, readback and next poll matched |
+| 123 | *SOCmax: Maximum charge limit of renewable source (%)* | `number` `soc_max` | 0–100 % | 95 → 96 → 95 |
+| 124 | *SOCgrid: Maximum charge limit from the grid/genset (%)* | `number` `soc_grid` | 0–100 % | 0 → 1 → 0 |
+| 125 | *SOCmin: Minimum limit for switching to standby (%)* | `number` `soc_min` | 0–100 % | 5 → 6 → 5 |
+| 128 | *Maximum battery charging power from the grid/genset (W)* | `number` `max_grid_charge_power` | 0–6000 W | 3000 → 2900 → 3000 |
+| 129 | *Maximum power injected to the grid (W)* | `number` `max_grid_injection_power` | −6000–6000 W | 6000 → 5900 → 6000 |
+| 116 | *Maximum Charge Current* (BMS) | `number` `bms_max_charge_current` | 0–50 A | 50 → 49 → 50 |
+| 132 bit 4 | *Battery Charging Priority* | `select` `battery_charge_priority` | PV then grid / grid only | there and back |
+| 132 bit 1 | *Battery-Backup Function: Mode* | `switch` `battery_backup` | on/off | on → off → on |
 
-The ISS uses the same address and meaning for SOCmax. The holding read of the
-1Play profile is limited to these registers.
+All entries have `sc` 1 and the range shown in the map. Each was validated on
+a real 1Play through the integration: the write was confirmed, the immediate
+readback and the next poll returned the new value, and the original value
+was restored the same way. While a bit of register 132 changed, the other
+exposed bit did not. SOCmax, SOCmin and the grid charging power use the same
+addresses and meanings as the ISS; the other settings live elsewhere on the
+1Play. The holding read of the profile is limited to these registers.
+
+Deliberately not exposed: operation mode (122), SOCdescx/SOCrecx (126/127,
+shutdown thresholds), the generator schedule (100.2, 110–113) and every grid
+protection, regulation, battery type and grid-quality setting.
 
 ## Not covered yet
 
