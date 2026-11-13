@@ -49,7 +49,7 @@
       },
       "model": {
         "title": "Wechselrichtermodell",
-        "description": "Aus der Wechselrichter-Map erkannt: {detected}. Das Profil STORAGE 1Play bietet nur auf diesem Modell validierte Einstellungen; die ISS-Steuerelemente werden nicht erstellt, da seine Register andere Bedeutungen haben.",
+        "description": "Aus der Wechselrichter-Map erkannt: {detected}. Beide sind Generationen des INGECON SUN STORAGE 1Play mit unterschiedlichen Registern. Ein Modell, das der Map widerspricht, wird abgelehnt; das Profil TL (ohne M) bietet nur auf diesem Modell validierte Einstellungen.",
         "data": {
           "model": "Modell"
         },
@@ -64,7 +64,8 @@
       "unknown": "Unerwarteter Fehler",
       "invalid_connection_settings": "Ungültige Verbindungseinstellungen. Die ID muss eine ganze Zahl von 1 bis 247 und der Port von 1 bis 65535 sein. Der Benutzername darf keinen Doppelpunkt enthalten. Benutzername und Passwort müssen Latin-1-Zeichen verwenden.",
       "unsupported_device": "Keine unterstützten Register für diese Wechselrichter-ID gefunden.",
-      "different_device": "Die Seriennummer gehört zu einem anderen Gerät. Historien werden nicht vermischt."
+      "different_device": "Die Seriennummer gehört zu einem anderen Gerät. Historien werden nicht vermischt.",
+      "model_mismatch": "Die Wechselrichter-Map widerspricht dem gewählten Modell. Wähle die andere Generation."
     },
     "abort": {
       "already_configured": "Dieser Wechselrichter ist bereits konfiguriert",
@@ -495,9 +496,15 @@
     },
     "model": {
       "options": {
-        "iss": "ISS (Referenz-Firmware ABH1007AE) — Überwachung und Steuerung",
-        "storage_1play": "INGECON SUN STORAGE 1Play (Map ABH1002) — Überwachung und validierte Einstellungen"
+        "iss": "INGECON SUN STORAGE 1Play TL M — 2 MPPT (Referenz-Firmware ABH1007AE)",
+        "storage_1play": "INGECON SUN STORAGE 1Play TL — 1 MPPT, ohne M (Map ABH1002AL, experimentell)"
       }
+    }
+  },
+  "issues": {
+    "profile_mismatch": {
+      "title": "Ingeteam: Wechselrichtermodell passt nicht zu seiner Map",
+      "description": "Die Wechselrichter-Map von **{title}** widerspricht dem gewählten Modell ({reason}). Es werden keine Steuerelemente erstellt und alle Schreibvorgänge abgelehnt, bis mit *Neu konfigurieren* das richtige Modell gewählt wird. Bestehende Entitäten bleiben erhalten."
     }
   }
 }

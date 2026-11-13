@@ -26,18 +26,21 @@ are not shifted retroactively; physical testing on the inverter remains needed.
 
 ## Supported models
 
-The setup flow asks for the inverter family and suggests it from the device's
-own map (`/inverter/map`, `compatible.firmware`):
+Both profiles are INGECON SUN STORAGE 1Play generations with different
+registers. The setup flow suggests one from the device's own map and rejects
+a model that the map contradicts:
 
-| Profile | Map firmware | Scope |
+| Profile | Map | Scope |
 |---|---|---|
-| **ISS** (default) | ABH1007AE | Monitoring and controls, as documented below |
-| **INGECON SUN STORAGE 1Play** | ABH1002 | Experimental: monitoring plus eight settings validated on that model (SOC limits, grid charge/injection power, BMS current, charge priority, battery backup) |
+| **1Play TL M — 2 MPPT** (default) | ABH1006/ABH1007 (reference ABH1007AE, 6TL M) | Monitoring and controls, as documented below |
+| **1Play TL — 1 MPPT, without M** | ABH1002 (ABH1002AL, 6TL) | Experimental: monitoring, plus eight settings validated on one inverter, disabled by default |
 
-Existing entries keep the ISS profile. The model can be changed with
-*Reconfigure*. The 1Play profile does not create the ISS controls, because many of
-its registers mean something different; see [STORAGE 1Play](docs/STORAGE_1PLAY.md)
-and its [validation record](docs/VALIDATION_STORAGE_1PLAY.md).
+Existing entries keep the TL M profile. The check also runs on every start:
+if the map contradicts the selected model, no control is created, every write
+is refused and a repair explains how to choose the right model with
+*Reconfigure*. Entities are never removed. See
+[STORAGE 1Play TL](docs/STORAGE_1PLAY.md) and its
+[validation record](docs/VALIDATION_STORAGE_1PLAY.md).
 
 ## Requirements
 

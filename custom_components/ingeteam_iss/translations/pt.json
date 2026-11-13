@@ -49,7 +49,7 @@
       },
       "model": {
         "title": "Modelo de inversor",
-        "description": "Detetado no mapa do inversor: {detected}. O perfil STORAGE 1Play só oferece as definições validadas nesse modelo; os controlos do ISS não são criados porque os seus registos têm outro significado.",
+        "description": "Detetado no mapa do inversor: {detected}. São duas gerações do INGECON SUN STORAGE 1Play com registos diferentes. Um modelo que contradiga o mapa é rejeitado, e o perfil TL (sem M) só oferece as definições validadas nesse modelo.",
         "data": {
           "model": "Modelo"
         },
@@ -64,7 +64,8 @@
       "unknown": "Erro inesperado",
       "invalid_connection_settings": "Definições de ligação inválidas. O ID deve ser um inteiro de 1 a 247 e a porta de 1 a 65535. O utilizador não pode conter ':'. O utilizador e a palavra-passe devem utilizar caracteres Latin-1.",
       "unsupported_device": "Não foram encontrados registos compatíveis para este ID do inversor.",
-      "different_device": "O número de série pertence a outro equipamento. Os históricos não serão misturados."
+      "different_device": "O número de série pertence a outro equipamento. Os históricos não serão misturados.",
+      "model_mismatch": "O mapa do inversor contradiz o modelo escolhido. Escolha a outra geração."
     },
     "abort": {
       "already_configured": "Este inversor já está configurado",
@@ -495,9 +496,15 @@
     },
     "model": {
       "options": {
-        "iss": "ISS (firmware de referência ABH1007AE) — monitorização e controlos",
-        "storage_1play": "INGECON SUN STORAGE 1Play (mapa ABH1002) — monitorização e definições validadas"
+        "iss": "INGECON SUN STORAGE 1Play TL M — 2 MPPT (firmware de referência ABH1007AE)",
+        "storage_1play": "INGECON SUN STORAGE 1Play TL — 1 MPPT, sem M (mapa ABH1002AL, experimental)"
       }
+    }
+  },
+  "issues": {
+    "profile_mismatch": {
+      "title": "Ingeteam: o modelo do inversor não corresponde ao seu mapa",
+      "description": "O mapa do inversor de **{title}** contradiz o modelo escolhido ({reason}). Não são criados controlos e qualquer escrita é recusada até escolher o modelo correto em *Reconfigurar*. As entidades existentes são mantidas."
     }
   }
 }

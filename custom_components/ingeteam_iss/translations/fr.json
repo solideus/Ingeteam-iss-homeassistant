@@ -49,7 +49,7 @@
       },
       "model": {
         "title": "Modèle d'onduleur",
-        "description": "Détecté dans la carte de l'onduleur : {detected}. Le profil STORAGE 1Play ne propose que les réglages validés sur ce modèle ; les commandes ISS ne sont pas créées car ses registres ont d'autres significations.",
+        "description": "Détecté dans la carte de l'onduleur : {detected}. Ce sont deux générations de l'INGECON SUN STORAGE 1Play avec des registres différents. Un modèle qui contredit la carte est refusé, et le profil TL (sans M) ne propose que les réglages validés sur ce modèle.",
         "data": {
           "model": "Modèle"
         },
@@ -64,7 +64,8 @@
       "unknown": "Erreur inattendue",
       "invalid_connection_settings": "Paramètres de connexion invalides. L’identifiant doit être un entier de 1 à 247 et le port de 1 à 65535. Le nom d’utilisateur ne peut pas contenir « : ». Le nom d’utilisateur et le mot de passe doivent utiliser des caractères Latin-1.",
       "unsupported_device": "Aucun registre compatible trouvé pour cet identifiant d’onduleur.",
-      "different_device": "Le numéro de série correspond à un autre appareil. Les historiques ne seront pas mélangés."
+      "different_device": "Le numéro de série correspond à un autre appareil. Les historiques ne seront pas mélangés.",
+      "model_mismatch": "La carte de l'onduleur contredit le modèle choisi. Choisissez l'autre génération."
     },
     "abort": {
       "already_configured": "Cet onduleur est déjà configuré",
@@ -495,9 +496,15 @@
     },
     "model": {
       "options": {
-        "iss": "ISS (firmware de référence ABH1007AE) — surveillance et commandes",
-        "storage_1play": "INGECON SUN STORAGE 1Play (carte ABH1002) — surveillance et réglages validés"
+        "iss": "INGECON SUN STORAGE 1Play TL M — 2 MPPT (firmware de référence ABH1007AE)",
+        "storage_1play": "INGECON SUN STORAGE 1Play TL — 1 MPPT, sans M (carte ABH1002AL, expérimental)"
       }
+    }
+  },
+  "issues": {
+    "profile_mismatch": {
+      "title": "Ingeteam : le modèle de l'onduleur ne correspond pas à sa carte",
+      "description": "La carte de l'onduleur de **{title}** contredit le modèle choisi ({reason}). Aucune commande n'est créée et toute écriture est refusée jusqu'à ce que le bon modèle soit choisi avec *Reconfigurer*. Les entités existantes sont conservées."
     }
   }
 }

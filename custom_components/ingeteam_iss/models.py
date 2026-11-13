@@ -1,10 +1,16 @@
 """Model profiles: each supported inverter family declares what it can do.
 
-The ISS profile is the original, validated behaviour (reference firmware
-ABH1007AE). The STORAGE 1Play map assigns different meanings to several
-addresses used by the ISS controls, so that profile only creates the controls
-listed in ``control_keys``, each confirmed by its own map and validated with a
-write/readback on a real inverter.
+Both families are INGECON SUN STORAGE 1Play inverters:
+
+* ``iss`` - **1Play TL M, 2 MPPT**: the original, validated behaviour
+  (reference portal firmware ABH1007AE, tested on a 6TL M).
+* ``storage_1play`` - **1Play TL without M, 1 MPPT**: experimental profile
+  based on one 6TL installation (inverter map ABH1002AL).
+
+Several holding and online addresses exist in both maps with different
+meanings, so a profile is only accepted when the device's own map does not
+contradict it (``profile_conflict``), and writes are limited to the fields of
+the controls the profile creates.
 """
 
 from __future__ import annotations
@@ -63,8 +69,6 @@ STORAGE_1PLAY_CONTROL_KEYS = (
     "battery_backup",
 )
 
-CONTROL_DOMAINS = ("number", "switch", "select", "time")
-
 
 @dataclass(frozen=True, slots=True)
 class ModelProfile:
@@ -79,8 +83,6 @@ class ModelProfile:
     decode_stream: Callable[[SSEEvent], dict[str, Any] | None] | None = None
     # Online address whose non-zero value means "active power reduction".
     power_reduction_register: int | None = None
-    # ISS entity keys whose registers mean something else on this model.
-    retired_keys: tuple[str, ...] = ()
     # Writable entities this profile creates; None = the full ISS set.
     control_keys: tuple[str, ...] | None = None
 
@@ -108,15 +110,37 @@ PROFILES: dict[str, ModelProfile] = {
         decode_telemetry=decode_telemetry_per_phase,
         decode_stream=decode_stream,
         power_reduction_register=59,
-        # HTTP 33 does not exist and HTTP 36 is the grid frequency.
-        retired_keys=("pv_1_power", "pv_2_power"),
     ),
 }
 
 # Firmware families declared in the "compatible" block of /inverter/map.
+# The TL M reference distinguishes portal firmware ABH1007AE from the internal
+# map ABH1006AC, so both prefixes identify that family.
 _FIRMWARE_PREFIXES = {
     "ABH1007": MODEL_ISS,
+    "ABH1006": MODEL_ISS,
     "ABH1002": MODEL_STORAGE_1PLAY,
+}
+
+# Map entries characteristic of the 1Play TL without M (map ABH1002AL). Each
+# one contradicts a field the TL M profile reads or writes at that address.
+STORAGE_1PLAY_SIGNATURES = (
+    ("holding", 58, 0, "Low battery voltage value for digital output"),
+    ("holding", 86, 0, "Duration of Absorption charge"),
+    ("holding", 130, 0, "Time for Minimum voltage"),
+    ("online", 36, 0, "Grid/Genset. Frequency"),
+)
+
+# English label each 1Play control must have in the device map.
+STORAGE_1PLAY_CONTROL_LABELS = {
+    (123, 0): "SOCmax",
+    (124, 0): "SOCgrid",
+    (125, 0): "SOCmin",
+    (128, 0): "Maximum battery charging power from the grid",
+    (129, 0): "Maximum power injected to the grid",
+    (116, 0): "Maximum Charge Current",
+    (132, 4): "Battery Charging Priority",
+    (132, 1): "Battery-Backup Function",
 }
 
 
@@ -125,8 +149,7 @@ def get_profile(model: str | None) -> ModelProfile:
     return PROFILES.get(model or MODEL_ISS, PROFILES[MODEL_ISS])
 
 
-def detect_model(capabilities: Mapping[str, Any]) -> str | None:
-    """Suggest a profile from the device's own map; None when unknown."""
+def _firmware_model(capabilities: Mapping[str, Any]) -> str | None:
     compatible = capabilities.get("compatible")
     for item in compatible if isinstance(compatible, list) else []:
         firmware = item.get("firmware") if isinstance(item, dict) else None
@@ -135,6 +158,69 @@ def detect_model(capabilities: Mapping[str, Any]) -> str | None:
         for prefix, model in _FIRMWARE_PREFIXES.items():
             if firmware.upper().startswith(prefix):
                 return model
+    return None
+
+
+def map_label(
+    capabilities: Mapping[str, Any], section: str, address: int, bit: int = 0
+) -> str | None:
+    """English label of one map field, or None when it is not declared."""
+    fields = capabilities.get(section)
+    langs = capabilities.get("langs")
+    labels = langs.get("ENGLISH") if isinstance(langs, dict) else None
+    for item in fields if isinstance(fields, list) else []:
+        if (
+            isinstance(item, dict)
+            and item.get("add") == address
+            and item.get("start", 0) == bit
+        ):
+            tid = item.get("tid")
+            label = labels.get(tid) if isinstance(labels, dict) else None
+            return label if isinstance(label, str) else ""
+    return None
+
+
+def storage_1play_evidence(capabilities: Mapping[str, Any]) -> list[str]:
+    """Map entries that identify a 1Play TL without M."""
+    found = []
+    for section, address, bit, prefix in STORAGE_1PLAY_SIGNATURES:
+        label = map_label(capabilities, section, address, bit)
+        if label and label.startswith(prefix):
+            found.append(f"{section} {address}.{bit}: {label}")
+    return found
+
+
+def detect_model(capabilities: Mapping[str, Any]) -> str | None:
+    """Suggest a profile from the device's own map; None when unknown."""
+    if storage_1play_evidence(capabilities):
+        return MODEL_STORAGE_1PLAY
+    return _firmware_model(capabilities)
+
+
+def profile_conflict(model: str | None, capabilities: Mapping[str, Any]) -> str | None:
+    """Reason why the map contradicts the profile, or None when compatible.
+
+    Entries created before model selection (``model`` None) are checked as
+    TL M. Without a map the TL M profile keeps its historical behaviour,
+    whereas the experimental 1Play profile needs positive identification.
+    """
+    profile = get_profile(model)
+    evidence = storage_1play_evidence(capabilities)
+    firmware_model = _firmware_model(capabilities)
+    if profile.key == MODEL_ISS:
+        if evidence:
+            return "1Play TL (without M) map: " + "; ".join(evidence)
+        if firmware_model == MODEL_STORAGE_1PLAY:
+            return f"map firmware {map_firmware(capabilities)}"
+        return None
+    if firmware_model == MODEL_ISS:
+        return f"1Play TL M map firmware {map_firmware(capabilities)}"
+    if not evidence:
+        return "the map does not identify a 1Play TL without M"
+    for (address, bit), prefix in STORAGE_1PLAY_CONTROL_LABELS.items():
+        label = map_label(capabilities, "holding", address, bit)
+        if not label or not label.startswith(prefix):
+            return f"holding {address}.{bit} is not '{prefix}' in this map"
     return None
 
 

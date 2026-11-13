@@ -16,6 +16,7 @@ from custom_components.ingeteam_iss.models import (
     STORAGE_1PLAY_ALARM_FIELDS,
     detect_model,
     get_profile,
+    profile_conflict,
 )
 from custom_components.ingeteam_iss.sse import (
     SSEEvent,
@@ -90,6 +91,56 @@ def test_missing_phase_value_is_not_zero():
     assert sample["pv_total_power"] == 0
 
 
+@pytest.mark.parametrize(
+    "mutate",
+    [
+        lambda phases: phases.__setitem__(1, dict(phases[0])),  # phase 1 twice
+        lambda phases: phases.pop(2),  # phase 3 missing
+        lambda phases: phases.append(dict(phases[0])),  # four phases
+        lambda phases: phases[0].__setitem__("Phase", "1"),  # not an integer
+    ],
+    ids=["duplicated", "missing", "extra", "invalid-number"],
+)
+def test_phase_set_must_be_exactly_1_2_3(mutate):
+    payload = json.loads(json.dumps(FIXTURE["sse"]["night"]["phases"]))
+    mutate(payload["Phases"])
+    event = SSEEvent(SSE_PHASE_EVENT, json.dumps(payload))
+    assert decode_telemetry_per_phase(event) is None
+
+
+def test_phase_order_does_not_matter():
+    payload = json.loads(json.dumps(FIXTURE["sse"]["night"]["phases"]))
+    payload["Phases"].reverse()
+    event = SSEEvent(SSE_PHASE_EVENT, json.dumps(payload))
+    assert decode_telemetry_per_phase(event)["total_load_power"] == 1819
+
+
+def test_profile_conflicts_with_the_real_map():
+    real = FIXTURE["map"]
+    assert profile_conflict(MODEL_STORAGE_1PLAY, real) is None
+    for model in (MODEL_ISS, None):
+        reason = profile_conflict(model, real)
+        assert reason and "holding 58.0" in reason and "online 36.0" in reason
+    # Without a map, TL M keeps its historical behaviour; 1Play needs proof.
+    assert profile_conflict(MODEL_ISS, {}) is None
+    assert profile_conflict(MODEL_STORAGE_1PLAY, {})
+    # A TL M map (either firmware family) is never accepted as 1Play.
+    for firmware in ("ABH1006AC", "ABH1007AE"):
+        tl_m = {"compatible": [{"firmware": firmware}]}
+        assert profile_conflict(MODEL_STORAGE_1PLAY, tl_m)
+        assert profile_conflict(MODEL_ISS, tl_m) is None
+        assert detect_model(tl_m) == MODEL_ISS
+
+
+def test_1play_controls_need_their_own_map_labels():
+    altered = json.loads(json.dumps(FIXTURE["map"]))
+    field = next(
+        f for f in altered["holding"] if f["add"] == 116 and f.get("start", 0) == 0
+    )
+    altered["langs"]["ENGLISH"][field["tid"]] = "Something else"
+    assert "holding 116.0" in profile_conflict(MODEL_STORAGE_1PLAY, altered)
+
+
 def test_aggregate_phase_still_uses_iss_decoder():
     payload = {"Phases": [{"Phase": 4, "pv": 100, "cons": 50, "W": -50}]}
     event = SSEEvent(SSE_PHASE_EVENT, json.dumps(payload))
@@ -101,6 +152,7 @@ def test_aggregate_phase_still_uses_iss_decoder():
     [
         ({"compatible": [{"firmware": "ABH1002AL"}]}, MODEL_STORAGE_1PLAY),
         ({"compatible": [{"firmware": "ABH1007AE"}]}, MODEL_ISS),
+        ({"compatible": [{"firmware": "ABH1006AC"}]}, MODEL_ISS),
         ({"compatible": [{"firmware": "XYZ"}]}, None),
         ({}, None),
     ],

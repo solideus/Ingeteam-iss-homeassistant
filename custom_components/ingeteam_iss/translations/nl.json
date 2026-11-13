@@ -49,7 +49,7 @@
       },
       "model": {
         "title": "Omvormermodel",
-        "description": "Gedetecteerd in de omvormermap: {detected}. Het profiel STORAGE 1Play biedt alleen instellingen die op dat model zijn gevalideerd; de ISS-bediening wordt niet aangemaakt omdat de registers een andere betekenis hebben.",
+        "description": "Gedetecteerd in de omvormermap: {detected}. Het zijn twee generaties van de INGECON SUN STORAGE 1Play met verschillende registers. Een model dat de map tegenspreekt wordt geweigerd, en het profiel TL (zonder M) biedt alleen instellingen die op dat model zijn gevalideerd.",
         "data": {
           "model": "Model"
         },
@@ -64,7 +64,8 @@
       "unknown": "Onverwachte fout",
       "invalid_connection_settings": "Ongeldige verbindingsinstellingen. De ID moet een geheel getal van 1 tot 247 zijn en de poort van 1 tot 65535. De gebruikersnaam mag geen ':' bevatten. Gebruikersnaam en wachtwoord moeten Latin-1-tekens gebruiken.",
       "unsupported_device": "Geen ondersteunde registers gevonden voor dit omvormer-ID.",
-      "different_device": "Het serienummer hoort bij een ander apparaat. De geschiedenis wordt niet samengevoegd."
+      "different_device": "Het serienummer hoort bij een ander apparaat. De geschiedenis wordt niet samengevoegd.",
+      "model_mismatch": "De omvormermap spreekt het gekozen model tegen. Kies de andere generatie."
     },
     "abort": {
       "already_configured": "Deze omvormer is al geconfigureerd",
@@ -495,9 +496,15 @@
     },
     "model": {
       "options": {
-        "iss": "ISS (referentiefirmware ABH1007AE) — bewaking en bediening",
-        "storage_1play": "INGECON SUN STORAGE 1Play (map ABH1002) — bewaking en gevalideerde instellingen"
+        "iss": "INGECON SUN STORAGE 1Play TL M — 2 MPPT (referentiefirmware ABH1007AE)",
+        "storage_1play": "INGECON SUN STORAGE 1Play TL — 1 MPPT, zonder M (map ABH1002AL, experimenteel)"
       }
+    }
+  },
+  "issues": {
+    "profile_mismatch": {
+      "title": "Ingeteam: omvormermodel komt niet overeen met zijn map",
+      "description": "De omvormermap van **{title}** spreekt het gekozen model tegen ({reason}). Er worden geen bedieningselementen aangemaakt en elke schrijfactie wordt geweigerd tot het juiste model is gekozen met *Opnieuw configureren*. Bestaande entiteiten blijven behouden."
     }
   }
 }

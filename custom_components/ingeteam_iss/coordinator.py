@@ -44,6 +44,10 @@ class IngeteamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.api = api
         self.profile = get_profile(model)
+        # Set at setup when the device map contradicts the profile.
+        self.profile_conflict: str | None = None
+        # (address, bit) -> (minimum, maximum), registered by created controls.
+        self.writable_fields: dict[tuple[int, int], tuple[int, int]] = {}
         self.device_info: dict[str, Any] = {}
         self._operation_lock = asyncio.Lock()
         self.alarms: list[dict] = []
@@ -140,14 +144,42 @@ class IngeteamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             return {"holding": holding, "online": online}
 
+    def allow_write(self, address: int, startbit: int, minimum: int, maximum: int):
+        """Register one field written by a control this profile created."""
+        self.writable_fields[address, startbit] = (int(minimum), int(maximum))
+
+    def _check_writes(self, values: list[tuple[int, int, int]]) -> None:
+        """Reject the whole operation before any HTTP request is sent."""
+        if self.profile_conflict is not None:
+            raise HomeAssistantError(
+                "Writes are disabled: the inverter map does not match the "
+                f"selected model ({self.profile_conflict})"
+            )
+        if not self.profile.writable:
+            raise HomeAssistantError("This inverter model is read-only")
+        for address, startbit, value in values:
+            limits = self.writable_fields.get((address, startbit))
+            if limits is None:
+                raise HomeAssistantError(
+                    f"Unsupported holding field {address}.{startbit} for this model"
+                )
+            if (
+                isinstance(value, bool)
+                or not isinstance(value, int)
+                or not limits[0] <= value <= limits[1]
+            ):
+                raise HomeAssistantError(
+                    f"Value {value!r} out of range {limits[0]}..{limits[1]} "
+                    f"for holding field {address}.{startbit}"
+                )
+
     async def async_write(self, address: int, startbit: int, value: int) -> None:
         """Write one field and confirm it immediately."""
         await self.async_write_many([(address, startbit, value)])
 
     async def async_write_many(self, values: list[tuple[int, int, int]]) -> None:
         """Read back every write without the polling refresh debounce."""
-        if not self.profile.writable:
-            raise HomeAssistantError("This inverter model is read-only")
+        self._check_writes(values)
         async with self._operation_lock:
             try:
                 await self.api.async_write_holding_values(values)

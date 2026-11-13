@@ -33,8 +33,19 @@ from .const import (
     DEFAULT_SSE_TIMEOUT,
     DOMAIN,
 )
-from .models import CONF_MODEL, MODEL_ISS, PROFILES, detect_model, get_profile
+from .models import (
+    CONF_MODEL,
+    MODEL_ISS,
+    PROFILES,
+    detect_model,
+    get_profile,
+    profile_conflict,
+)
 from .values import bounded_integer
+
+
+class _ModelMismatch(Exception):
+    """The device map contradicts the selected model."""
 
 
 async def _async_validate_model(api: IngeteamApi, model: str) -> bool:
@@ -121,7 +132,11 @@ class IngeteamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             model = user_input[CONF_MODEL]
             try:
+                if profile_conflict(model, self._api.capabilities) is not None:
+                    raise _ModelMismatch
                 usable = await _async_validate_model(self._api, model)
+            except _ModelMismatch:
+                errors["base"] = "model_mismatch"
             except IngeteamAuthError:
                 errors["base"] = "invalid_auth"
             except IngeteamConnectionError:
@@ -201,7 +216,12 @@ class IngeteamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await api.async_device_info()
                 await api.async_load_capabilities()
                 candidate.setdefault(CONF_MODEL, MODEL_ISS)
-                if not await _async_validate_model(api, candidate[CONF_MODEL]):
+                if (
+                    profile_conflict(candidate[CONF_MODEL], api.capabilities)
+                    is not None
+                ):
+                    errors["base"] = "model_mismatch"
+                elif not await _async_validate_model(api, candidate[CONF_MODEL]):
                     errors["base"] = "unsupported_device"
                 elif (entry.data.get("device_serial") or entry.unique_id) not in (
                     None,

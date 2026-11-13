@@ -160,14 +160,18 @@ def decode_telemetry_per_phase(event: SSEEvent) -> dict[str, float | None] | Non
     if any(isinstance(p, dict) and p.get("Phase") == 4 for p in phases):
         # A firmware with the aggregate phase is decoded the ISS way.
         return decode_telemetry(event)
-    rows = [p for p in phases if isinstance(p, dict) and p.get("Phase") in (1, 2, 3)]
-    if not rows:
+    numbers = [p.get("Phase") if isinstance(p, dict) else None for p in phases]
+    if not all(type(n) is int for n in numbers) or sorted(numbers) != [1, 2, 3]:
+        # Exactly one phase 1, 2 and 3, as the inverter sends even on
+        # single-phase systems. Duplicated or missing phases would add or
+        # silently drop power, so the whole event is rejected.
         return None
+    rows = sorted(phases, key=lambda p: p["Phase"])
 
     def total(key: str, minimum: float | None = None) -> float | None:
         values = [finite_number(p.get(key)) for p in rows]
         if any(value is None for value in values):
-            return None  # A missing phase is not zero watts.
+            return None  # A missing value in any phase is not zero watts.
         value = sum(values)
         return None if minimum is not None and value < minimum else value
 

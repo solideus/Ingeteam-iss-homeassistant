@@ -7,15 +7,18 @@ import json
 from pathlib import Path
 from types import MappingProxyType
 
+import pytest
 import pytest_asyncio
 from aiohttp import ClientSession, web
 from homeassistant import loader
 from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers import frame
+from homeassistant.helpers import issue_registry as ir
 
 from custom_components.ingeteam_iss.const import DOMAIN, SSE_PATH
 
@@ -42,7 +45,9 @@ def capture(name):
 
 
 @pytest_asyncio.fixture
-async def play(tmp_path, monkeypatch):
+async def play(tmp_path, monkeypatch, request):
+    # "storage_1play" by default; None = entry created before model selection.
+    model = getattr(request, "param", "storage_1play")
     (tmp_path / "custom_components").symlink_to(
         ROOT / "custom_components", target_is_directory=True
     )
@@ -148,7 +153,7 @@ async def play(tmp_path, monkeypatch):
             "password": "test-password",
             "device_id": 1,
             "identity": SERIAL,
-            "model": "storage_1play",
+            **({"model": model} if model else {}),
         },
         options={},
         source="user",
@@ -163,13 +168,48 @@ async def play(tmp_path, monkeypatch):
     await hass.config_entries.async_add(entry)
     await hass.async_block_till_done()
     assert entry.state == ConfigEntryState.LOADED
-    await wait_until(lambda: entry.runtime_data.telemetry.connected)
+    if model == "storage_1play":
+        await wait_until(lambda: entry.runtime_data.telemetry.connected)
     await hass.async_block_till_done()
     yield hass, entry, data
     if entry.state == ConfigEntryState.LOADED:
         await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_stop(force=True)
     await session.close()
+
+
+CONTROLS = {
+    "soc_max",
+    "soc_grid",
+    "soc_min",
+    "max_grid_charge_power",
+    "max_grid_injection_power",
+    "bms_max_charge_current",
+    "battery_charge_priority",
+    "battery_backup",
+}
+
+
+async def enable_controls(hass, entry):
+    """Experimental controls are disabled by default; enable them for a test."""
+    registry = er.async_get(hass)
+    for item in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if item.domain in ("number", "switch", "select") and item.disabled_by:
+            registry.async_update_entity(item.entity_id, disabled_by=None)
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    await wait_until(lambda: entry.runtime_data.telemetry.connected)
+    await hass.async_block_till_done()
+
+
+async def emit(hass, entry, data, payload_bytes):
+    telemetry = entry.runtime_data.telemetry
+    before = (telemetry.last_event, telemetry.discarded_frames)
+    await data["sse_queue"].put(payload_bytes)
+    await wait_until(
+        lambda: (telemetry.last_event, telemetry.discarded_frames) != before
+    )
+    await hass.async_block_till_done()
 
 
 def state(hass, domain, key):
@@ -184,20 +224,13 @@ async def test_only_validated_controls_and_no_unrequested_writes(play):
     hass, entry, data = play
     entities = er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
     controls = {
-        e.unique_id.removeprefix(f"{SERIAL}_")
+        e.unique_id.removeprefix(f"{SERIAL}_"): e
         for e in entities
         if e.domain in ("number", "switch", "select", "time")
     }
-    assert controls == {
-        "soc_max",
-        "soc_grid",
-        "soc_min",
-        "max_grid_charge_power",
-        "max_grid_injection_power",
-        "bms_max_charge_current",
-        "battery_charge_priority",
-        "battery_backup",
-    }
+    assert set(controls) == CONTROLS
+    # Experimental controls are registered disabled by default.
+    assert all(e.disabled_by is not None for e in controls.values())
     # Holding reads are limited to the validated registers; setup never writes.
     holding_reads = [body for source, body in data["reads"] if source == "holding"]
     assert holding_reads
@@ -211,7 +244,8 @@ async def test_only_validated_controls_and_no_unrequested_writes(play):
 
 
 async def test_soc_max_write_and_readback(play):
-    hass, _, data = play
+    hass, entry, data = play
+    await enable_controls(hass, entry)
     assert state(hass, "number", "soc_max").state == "95.0"
     entity_id = state(hass, "number", "soc_max").entity_id
     await hass.services.async_call(
@@ -224,7 +258,8 @@ async def test_soc_max_write_and_readback(play):
 
 
 async def test_1play_settings_write_their_own_registers(play):
-    hass, _, data = play
+    hass, entry, data = play
+    await enable_controls(hass, entry)
     assert state(hass, "number", "max_grid_injection_power").state == "6000.0"
     assert state(hass, "number", "bms_max_charge_current").state == "50.0"
     assert state(hass, "switch", "battery_backup").state == "on"
@@ -282,7 +317,6 @@ async def test_online_registers_are_scaled_with_the_map(play):
         "grid_frequency": "50.01",
         "ac_loads_power": "4728",
         "heatsink_temperature": "61.6",
-        "power_reduction_ratio": "78.8",
     }
     for key, value in expected.items():
         assert float(state(hass, "sensor", key).state) == float(value), key
@@ -298,17 +332,140 @@ async def test_states_alarms_and_grid_bit(play):
     assert entry.runtime_data.alarm_coverage_complete
 
 
-async def test_stale_iss_entities_are_removed_on_setup(play):
-    """Controls and PV strings left by an ISS-profile entry are dropped."""
-    hass, entry, _ = play
+async def test_writes_are_checked_before_any_request(play):
+    """Only fields of created controls, inside their range, reach the inverter."""
+    hass, entry, data = play
+    await enable_controls(hass, entry)
+    coordinator = entry.runtime_data
+    with pytest.raises(HomeAssistantError, match="Unsupported"):
+        await coordinator.async_write(58, 0, 200)  # digital output threshold
+    with pytest.raises(HomeAssistantError, match="out of range"):
+        await coordinator.async_write(123, 0, 101)
+    with pytest.raises(HomeAssistantError, match="Unsupported"):
+        # One forbidden field rejects the whole operation.
+        await coordinator.async_write_many([(123, 0, 96), (130, 0, 10)])
+    assert data["writes"] == []
+
+
+async def test_writes_are_refused_while_controls_are_disabled(play):
+    hass, entry, data = play
+    with pytest.raises(HomeAssistantError, match="Unsupported"):
+        await entry.runtime_data.async_write(123, 0, 96)
+    assert data["writes"] == []
+
+
+@pytest.mark.parametrize("play", [None, "iss"], indirect=True)
+async def test_tl_m_profile_on_a_1play_map_blocks_controls_and_writes(play):
+    """Old entries without model and a wrong selection are both caught."""
+    hass, entry, data = play
+    coordinator = entry.runtime_data
+    assert coordinator.profile_conflict
+    assert "holding 58.0" in coordinator.profile_conflict
+    entities = er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
+    assert not [
+        e for e in entities if e.domain in ("number", "switch", "select", "time")
+    ]
+    with pytest.raises(HomeAssistantError, match="does not match"):
+        await coordinator.async_write(58, 0, 200)
+    assert data["writes"] == []
+    issue = ir.async_get(hass).async_get_issue(
+        DOMAIN, f"profile_mismatch_{entry.entry_id}"
+    )
+    assert issue is not None and issue.translation_key == "profile_mismatch"
+
+
+async def test_reconfigure_rejects_a_model_that_contradicts_the_map(play, monkeypatch):
+    hass, entry, data = play
+    session = ClientSession()
+    monkeypatch.setattr(
+        "custom_components.ingeteam_iss.config_flow.async_get_clientsession",
+        lambda _: session,
+    )
+    try:
+        flow = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "reconfigure", "entry_id": entry.entry_id}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"],
+            {
+                "model": "iss",
+                "host": entry.data["host"],
+                "username": "tester",
+                "password": "",
+                "port": entry.data["port"],
+                "device_id": 1,
+            },
+        )
+    finally:
+        await session.close()
+    assert result["errors"] == {"base": "model_mismatch"}
+    assert entry.data["model"] == "storage_1play"
+
+
+async def test_entities_are_kept_with_their_customisations(play):
+    """Unsupported entities are not removed; they just get no control."""
+    hass, entry, data = play
     registry = er.async_get(hass)
     for domain, key in (("number", "soc_recovery"), ("sensor", "pv_2_power")):
-        registry.async_get_or_create(
+        item = registry.async_get_or_create(
             domain, DOMAIN, f"{SERIAL}_{key}", config_entry=entry
         )
+        registry.async_update_entity(item.entity_id, name=f"Mine {key}")
     assert await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
     for domain, key in (("number", "soc_recovery"), ("sensor", "pv_2_power")):
-        assert registry.async_get_entity_id(domain, DOMAIN, f"{SERIAL}_{key}") is None
-    assert registry.async_get_entity_id("sensor", DOMAIN, f"{SERIAL}_battery_soc")
-    assert registry.async_get_entity_id("number", DOMAIN, f"{SERIAL}_soc_max")
+        entity_id = registry.async_get_entity_id(domain, DOMAIN, f"{SERIAL}_{key}")
+        assert entity_id is not None
+        assert registry.async_get(entity_id).name == f"Mine {key}"
+    with pytest.raises(HomeAssistantError, match="Unsupported"):
+        await entry.runtime_data.async_write(130, 0, 10)
+    assert data["writes"] == []
+
+
+def stream_with(name, **changes):
+    payload = json.loads(json.dumps(FIXTURE["sse"][name]["stream"]))
+    payload["Devices"][0].update(changes)
+    return event_bytes("/ems/sse/stream", payload)
+
+
+async def test_battery_not_configured_withdraws_battery_readings(play):
+    hass, entry, data = play
+    assert state(hass, "sensor", "battery_soc").state == "15"
+    await emit(
+        hass,
+        entry,
+        data,
+        stream_with("night", StatusBat=7)
+        + event_bytes("/ems/sse/phases", FIXTURE["sse"]["night"]["phases"]),
+    )
+    for key in ("battery_soc", "battery_power", "battery_discharge_power"):
+        assert state(hass, "sensor", key).state == "unavailable", key
+    assert state(hass, "sensor", "battery_flow").state == "not_available"
+    # Grid and load readings are unaffected.
+    assert state(hass, "sensor", "total_load_power").state == "1819"
+
+
+async def test_stale_stream_status_withdraws_battery_readings(play):
+    hass, entry, data = play
+    telemetry = entry.runtime_data.telemetry
+    telemetry._stream_time -= telemetry.timeout + 1
+    await emit(
+        hass,
+        entry,
+        data,
+        event_bytes("/ems/sse/phases", FIXTURE["sse"]["night"]["phases"]),
+    )
+    assert telemetry.data["battery_status"] is None
+    assert state(hass, "sensor", "battery_soc").state == "unavailable"
+    assert state(hass, "sensor", "total_load_power").state == "1819"
+
+
+async def test_duplicated_phase_is_rejected(play):
+    hass, entry, data = play
+    telemetry = entry.runtime_data.telemetry
+    payload = json.loads(json.dumps(FIXTURE["sse"]["night"]["phases"]))
+    payload["Phases"][1] = dict(payload["Phases"][0])  # phase 1 twice
+    frames = telemetry.valid_frames
+    await emit(hass, entry, data, event_bytes("/ems/sse/phases", payload))
+    assert telemetry.valid_frames == frames
+    assert state(hass, "sensor", "total_load_power").state == "1819"

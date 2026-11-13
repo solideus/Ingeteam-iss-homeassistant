@@ -1,26 +1,33 @@
 # Registro de cambios
 
-## Sin publicar — Selector de modelo y perfil STORAGE 1Play
+## Sin publicar — Selector de modelo y perfil 1Play TL (sin M)
 
-- Añade un paso de modelo al alta, con el modelo detectado en el mapa del
-  inversor, y lo permite cambiar al reconfigurar. Las entradas existentes
-  conservan el perfil ISS sin cambios.
-- Nuevo perfil experimental de solo lectura para INGECON SUN STORAGE 1Play
-  (mapa ABH1002AL, tarjeta AAX0077, firmware AAX1055DC): decodifica
-  `/ems/sse/phases` sin fase 4 sumando las fases 1–3 y toma los estados de
-  `/ems/sse/stream`.
-- Expone todos los registros online del mapa 1Play con su escala (tensiones,
-  corrientes, frecuencias, temperaturas, aislamiento, SOH, estados) y decodifica
-  sus alarmas en sus propias direcciones; «conectado a red» usa el bit 0 del
-  estado del inversor (Modbus 30013).
-- El perfil 1Play solo crea los controles validados en ese modelo, cada uno
-  probado con escritura, relectura y restauración en un equipo real: SOCmax,
-  SOCgrid, SOCmin, potencia máxima de carga desde red, potencia máxima
-  inyectada, corriente máxima de carga BMS, prioridad de carga y backup de
-  batería. Solo lee esos registros holding y elimina al arrancar los controles y las
-  cadenas FV que hubiera dejado una entrada ISS.
-- Pruebas con capturas reales del 1Play y documentación en
-  `docs/STORAGE_1PLAY.md`.
+- Paso de modelo en el alta: **1Play TL M — 2 MPPT** (perfil existente) o
+  **1Play TL — 1 MPPT, sin M** (experimental). Las entradas existentes
+  conservan el perfil TL M.
+- El modelo se comprueba contra el mapa del propio equipo, mediante firmas de
+  campos y el firmware declarado, en el alta, al reconfigurar y en cada
+  arranque. Si hay contradicción no se crean controles, se rechaza cualquier
+  escritura y se abre una reparación. Las entidades no se eliminan.
+- El coordinador valida dirección, bit y valor de cada escritura contra los
+  controles creados y activos antes de enviar la petición. Una operación con
+  un campo no permitido se rechaza entera.
+- Perfil 1Play TL (sin M), mapa ABH1002AL:
+  - decodifica `/ems/sse/phases` sin fase 4, exigiendo exactamente las fases
+    1, 2 y 3, y toma los estados de `/ems/sse/stream` mientras sean recientes;
+  - retira SOC, tensión y potencias de batería, y rompe sus anclas de energía,
+    si la batería no está configurada (estado 7) o su estado deja de llegar;
+  - expone los registros online del mapa con su escala, con los diagnósticos
+    avanzados deshabilitados por defecto, y decodifica sus alarmas en sus
+    propias direcciones; «conectado a red» usa el bit 0 del estado del
+    inversor (Modbus 30013);
+  - ofrece ocho ajustes comprobados en un equipo real con escritura, relectura
+    y restauración: SOCmax, SOCgrid, SOCmin, potencia máxima de carga desde
+    red, potencia máxima inyectada, corriente máxima de carga BMS, prioridad
+    de carga y backup de batería. Están deshabilitados por defecto y solo se
+    leen sus registros holding.
+- Pruebas con capturas reales del 1Play TL y documentación en
+  `docs/STORAGE_1PLAY.md` y `docs/VALIDATION_STORAGE_1PLAY.md`.
 
 ## 0.5.3 — Correcciones de balance horario y robustez
 

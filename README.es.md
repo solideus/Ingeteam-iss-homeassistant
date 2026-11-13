@@ -11,18 +11,21 @@ No escribe parámetros durante la instalación.
 
 ## Modelos compatibles
 
-El asistente pregunta la familia del inversor y propone la que indica su propio
-mapa (`/inverter/map`, `compatible.firmware`):
+Los dos perfiles son generaciones del INGECON SUN STORAGE 1Play con registros
+distintos. El asistente propone uno según el mapa del propio equipo y rechaza
+el modelo que el mapa contradiga:
 
-| Perfil | Firmware del mapa | Alcance |
+| Perfil | Mapa | Alcance |
 |---|---|---|
-| **ISS** (predeterminado) | ABH1007AE | Monitorización y controles, como se describe abajo |
-| **INGECON SUN STORAGE 1Play** | ABH1002 | Experimental: monitorización y ocho ajustes validados en ese modelo (límites de SOC, potencia de carga e inyección, corriente BMS, prioridad de carga, backup) |
+| **1Play TL M — 2 MPPT** (predeterminado) | ABH1006/ABH1007 (referencia ABH1007AE, 6TL M) | Monitorización y controles, como se describe abajo |
+| **1Play TL — 1 MPPT, sin M** | ABH1002 (ABH1002AL, 6TL) | Experimental: monitorización y ocho ajustes validados en un equipo, deshabilitados por defecto |
 
-Las entradas existentes conservan el perfil ISS. El modelo se puede cambiar con
-*Reconfigurar*. El perfil 1Play no crea los controles del ISS, porque muchos de
-sus registros tienen otro significado; consulta [STORAGE 1Play](docs/STORAGE_1PLAY.md) y
-su [validación](docs/VALIDATION_STORAGE_1PLAY.md).
+Las entradas existentes conservan el perfil TL M. La comprobación se repite en
+cada arranque: si el mapa contradice el modelo elegido, no se crean controles,
+se rechaza cualquier escritura y una reparación explica cómo elegir el modelo
+correcto con *Reconfigurar*. Las entidades nunca se eliminan. Consulta
+[STORAGE 1Play TL](docs/STORAGE_1PLAY.md) y su
+[validación](docs/VALIDATION_STORAGE_1PLAY.md).
 
 ## Requisitos y acceso
 

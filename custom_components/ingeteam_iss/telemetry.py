@@ -33,6 +33,17 @@ from .sse import decode_telemetry
 
 _LOGGER = logging.getLogger(__name__)
 
+# Battery status 7 is "No Configured" in the 1Play map (and the observed
+# "battery not available" code on the TL M reference).
+BATTERY_NOT_CONFIGURED = 7
+BATTERY_KEYS = (
+    "battery_soc",
+    "battery_voltage",
+    "battery_charge_power",
+    "battery_discharge_power",
+    "battery_power",
+)
+
 
 class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Push updates cannot reset the HTTP polling timer or control availability."""
@@ -72,6 +83,7 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.decode_telemetry = decode_telemetry
         self.decode_stream = None
         self._stream_state: dict[str, float] = {}
+        self._stream_time: float | None = None
         self._cancel_tick = None
         self._cancel_net_close = None
         self._store: Store = Store(
@@ -211,7 +223,29 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.accounting.break_interval()
         self.latest_sample = {}
         self._stream_state = {}
+        self._stream_time = None
         self.async_set_updated_data({})
+
+    def _merge_stream_state(self, sample: dict[str, Any]) -> dict[str, Any]:
+        """Add stream status codes and apply battery availability.
+
+        Status codes are only used while fresh (within the SSE watchdog
+        timeout). Without a fresh, valid battery status - or with status 7,
+        "not configured" in the map - battery readings are withdrawn before
+        publication and energy integration, which breaks their anchors.
+        """
+        fresh = (
+            self._stream_time is not None
+            and self.hass.loop.time() - self._stream_time <= self.timeout
+        )
+        merged = dict(sample)
+        for key in ("battery_status", "inverter_status"):
+            if merged.get(key) is None:
+                merged[key] = self._stream_state.get(key) if fresh else None
+        if merged.get("battery_status") in (None, BATTERY_NOT_CONFIGURED):
+            for key in BATTERY_KEYS:
+                merged[key] = None
+        return merged
 
     async def _run(self) -> None:
         delay = 1
@@ -232,18 +266,12 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                                     if status is not None:
                                         # Status codes complement the next phase
                                         # sample; they are not fresh power data.
-                                        self._stream_state.update(status)
+                                        self._stream_state = status
+                                        self._stream_time = self.hass.loop.time()
                                         continue
                                 sample = self.decode_telemetry(event)
-                                if sample is not None and self._stream_state:
-                                    sample = {
-                                        **sample,
-                                        **{
-                                            key: value
-                                            for key, value in self._stream_state.items()
-                                            if sample.get(key) is None
-                                        },
-                                    }
+                                if sample is not None and self.decode_stream:
+                                    sample = self._merge_stream_state(sample)
                                 if sample is None:
                                     self.discarded_frames += 1
                                     if event.event == SSE_PHASE_EVENT:

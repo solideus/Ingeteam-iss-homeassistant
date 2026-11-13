@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import datetime
 
 from homeassistant.components.sensor import (
@@ -155,26 +155,55 @@ _SDC = SensorDeviceClass
 
 STORAGE_1PLAY_SENSORS: tuple[IngeteamSensorDescription, ...] = (
     *(desc for desc in SENSORS if desc.key in _COMMON_SSE_KEYS),
-    online_description("battery_current", 15, 100, _A, _SDC.CURRENT),
+    replace(
+        online_description("battery_current", 15, 100, _A, _SDC.CURRENT),
+        needs_battery=True,
+    ),
     online_description("battery_soh", 18, 1, PERCENTAGE, None),
     online_description("battery_temperature", 22, 10, _C, _SDC.TEMPERATURE),
     online_description(
-        "battery_max_charge_current", 19, 100, _A, _SDC.CURRENT, diagnostic=True
+        "battery_max_charge_current",
+        19,
+        100,
+        _A,
+        _SDC.CURRENT,
+        diagnostic=True,
+        enabled=False,
     ),
     online_description(
-        "battery_max_discharge_current", 20, 100, _A, _SDC.CURRENT, diagnostic=True
+        "battery_max_discharge_current",
+        20,
+        100,
+        _A,
+        _SDC.CURRENT,
+        diagnostic=True,
+        enabled=False,
     ),
     online_description(
-        "battery_charge_voltage", 52, 10, _V, _SDC.VOLTAGE, diagnostic=True
+        "battery_charge_voltage",
+        52,
+        10,
+        _V,
+        _SDC.VOLTAGE,
+        diagnostic=True,
+        enabled=False,
     ),
     online_description(
-        "battery_discharge_voltage", 53, 10, _V, _SDC.VOLTAGE, diagnostic=True
+        "battery_discharge_voltage",
+        53,
+        10,
+        _V,
+        _SDC.VOLTAGE,
+        diagnostic=True,
+        enabled=False,
     ),
     online_description("pv_voltage", 23, 1, _V, _SDC.VOLTAGE),
     online_description("pv_current", 24, 100, _A, _SDC.CURRENT),
-    online_description("ac_loads_voltage", 26, 1, _V, _SDC.VOLTAGE),
-    online_description("ac_loads_current", 27, 100, _A, _SDC.CURRENT),
-    online_description("ac_loads_frequency", 28, 100, _HZ, _SDC.FREQUENCY),
+    online_description("ac_loads_voltage", 26, 1, _V, _SDC.VOLTAGE, enabled=False),
+    online_description("ac_loads_current", 27, 100, _A, _SDC.CURRENT, enabled=False),
+    online_description(
+        "ac_loads_frequency", 28, 100, _HZ, _SDC.FREQUENCY, enabled=False
+    ),
     online_description("ac_loads_power", 29, 1, _W, _SDC.POWER),
     online_description(
         "ac_loads_reactive_power",
@@ -186,9 +215,9 @@ STORAGE_1PLAY_SENSORS: tuple[IngeteamSensorDescription, ...] = (
         enabled=False,
     ),
     online_description("grid_voltage", 34, 1, _V, _SDC.VOLTAGE),
-    online_description("grid_current", 35, 100, _A, _SDC.CURRENT),
+    online_description("grid_current", 35, 100, _A, _SDC.CURRENT, enabled=False),
     online_description("grid_frequency", 36, 100, _HZ, _SDC.FREQUENCY),
-    online_description("grid_active_power", 37, 1, _W, _SDC.POWER),
+    online_description("grid_active_power", 37, 1, _W, _SDC.POWER, enabled=False),
     online_description(
         "grid_reactive_power",
         38,
@@ -207,7 +236,9 @@ STORAGE_1PLAY_SENSORS: tuple[IngeteamSensorDescription, ...] = (
         diagnostic=True,
         enabled=False,
     ),
-    online_description("dc_bus_voltage", 39, 1, _V, _SDC.VOLTAGE, diagnostic=True),
+    online_description(
+        "dc_bus_voltage", 39, 1, _V, _SDC.VOLTAGE, diagnostic=True, enabled=False
+    ),
     online_description(
         "residual_current",
         48,
@@ -215,10 +246,17 @@ STORAGE_1PLAY_SENSORS: tuple[IngeteamSensorDescription, ...] = (
         UnitOfElectricCurrent.MILLIAMPERE,
         _SDC.CURRENT,
         diagnostic=True,
+        enabled=False,
     ),
     online_description("heatsink_temperature", 40, 10, _C, _SDC.TEMPERATURE),
     online_description(
-        "electronics_temperature", 41, 10, _C, _SDC.TEMPERATURE, diagnostic=True
+        "electronics_temperature",
+        41,
+        10,
+        _C,
+        _SDC.TEMPERATURE,
+        diagnostic=True,
+        enabled=False,
     ),
     online_description(
         "pt100_temperature",
@@ -255,9 +293,16 @@ STORAGE_1PLAY_SENSORS: tuple[IngeteamSensorDescription, ...] = (
         _SDC.DURATION,
         diagnostic=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        enabled=False,
     ),
     online_description(
-        "power_reduction_ratio", 60, 10, PERCENTAGE, None, diagnostic=True
+        "power_reduction_ratio",
+        60,
+        10,
+        PERCENTAGE,
+        None,
+        diagnostic=True,
+        enabled=False,
     ),
 )
 
@@ -548,6 +593,7 @@ class IngeteamMapStateSensor(IngeteamEntity, SensorEntity):
         self._attr_translation_key = key
         if diagnostic:
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
+            self._attr_entity_registry_enabled_default = False
 
     @property
     def available(self):

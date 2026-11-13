@@ -99,6 +99,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up writable schedule times."""
+    if entry.runtime_data.profile_conflict is not None:
+        return
     async_add_entities(
         IngeteamTime(entry.runtime_data, desc)
         for desc in TIMES
@@ -120,6 +122,10 @@ class IngeteamTime(IngeteamEntity, TimeEntity):
         super().__init__(coordinator, description.register, description.group)
         self.entity_description = description
         self._attr_unique_id = f"{self._serial}_{description.key}"
+
+    def _write_fields(self):
+        address = self.register.address
+        return ((address, 0, 0, 59), (address, 8, 0, 23))
 
     @property
     def available(self) -> bool:

@@ -219,7 +219,7 @@ _ISS = {desc.key: desc for desc in NUMBERS}
 
 # STORAGE 1Play holding map (ABH1002AL), section "6- OPERATION MODE" and
 # "1.2- BMS Battery Settings". Addresses and ranges are the map's own.
-STORAGE_1PLAY_NUMBERS: tuple[IngeteamNumberDescription, ...] = (
+_STORAGE_1PLAY_NUMBERS: tuple[IngeteamNumberDescription, ...] = (
     _ISS["soc_max"],  # 123, same address and meaning as the ISS
     IngeteamNumberDescription(
         key="soc_grid",
@@ -252,6 +252,12 @@ STORAGE_1PLAY_NUMBERS: tuple[IngeteamNumberDescription, ...] = (
     ),
 )
 
+# Experimental: disabled by default until the review checks are complete.
+STORAGE_1PLAY_NUMBERS = tuple(
+    replace(desc, entity_registry_enabled_default=False)
+    for desc in _STORAGE_1PLAY_NUMBERS
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -260,6 +266,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up writable number entities."""
     profile = entry.runtime_data.profile
+    if entry.runtime_data.profile_conflict is not None:
+        return
     keys = profile.control_keys
     descriptions = (
         STORAGE_1PLAY_NUMBERS if profile.key == MODEL_STORAGE_1PLAY else NUMBERS
@@ -285,6 +293,17 @@ class IngeteamNumber(IngeteamEntity, NumberEntity):
         super().__init__(coordinator, description.register, description.group)
         self.entity_description = description
         self._attr_unique_id = f"{self._serial}_{description.key}"
+
+    def _write_fields(self):
+        desc = self.entity_description
+        return (
+            (
+                desc.register.address,
+                desc.register.startbit,
+                desc.native_min_value,
+                desc.native_max_value,
+            ),
+        )
 
     @property
     def available(self) -> bool:

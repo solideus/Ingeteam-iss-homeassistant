@@ -49,7 +49,7 @@
       },
       "model": {
         "title": "Inverter model",
-        "description": "Detected from the inverter map: {detected}. The STORAGE 1Play profile only offers settings validated on that model; the ISS controls are not created because its registers have different meanings.",
+        "description": "Detected from the inverter map: {detected}. Both are INGECON SUN STORAGE 1Play generations with different registers. A model that contradicts the inverter map is rejected, and the TL (without M) profile only offers settings validated on that model.",
         "data": {
           "model": "Model"
         },
@@ -64,7 +64,8 @@
       "unknown": "Unexpected error",
       "invalid_connection_settings": "Invalid connection settings. The ID must be an integer from 1 to 247 and the port from 1 to 65535. The username cannot contain ':'. The username and password must use Latin-1 characters.",
       "unsupported_device": "No compatible registers found for this inverter ID.",
-      "different_device": "The serial number belongs to a different device. Its history cannot be mixed."
+      "different_device": "The serial number belongs to a different device. Its history cannot be mixed.",
+      "model_mismatch": "The inverter map contradicts the selected model. Choose the other generation."
     },
     "abort": {
       "already_configured": "This inverter is already configured",
@@ -495,9 +496,15 @@
     },
     "model": {
       "options": {
-        "iss": "ISS (reference firmware ABH1007AE) — monitoring and controls",
-        "storage_1play": "INGECON SUN STORAGE 1Play (map ABH1002) — monitoring and validated settings"
+        "iss": "INGECON SUN STORAGE 1Play TL M — 2 MPPT (reference firmware ABH1007AE)",
+        "storage_1play": "INGECON SUN STORAGE 1Play TL — 1 MPPT, without M (map ABH1002AL, experimental)"
       }
+    }
+  },
+  "issues": {
+    "profile_mismatch": {
+      "title": "Ingeteam: inverter model does not match its map",
+      "description": "The inverter map of **{title}** contradicts the selected model ({reason}). Controls are not created and every write is refused until the correct model is selected with *Reconfigure*. Existing entities are kept."
     }
   }
 }

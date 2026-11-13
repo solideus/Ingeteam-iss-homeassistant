@@ -49,7 +49,7 @@
       },
       "model": {
         "title": "Model falownika",
-        "description": "Wykryto na mapie falownika: {detected}. Profil STORAGE 1Play oferuje tylko ustawienia zweryfikowane na tym modelu; elementy sterujące ISS nie są tworzone, ponieważ jego rejestry mają inne znaczenie.",
+        "description": "Wykryto na mapie falownika: {detected}. To dwie generacje INGECON SUN STORAGE 1Play z różnymi rejestrami. Model sprzeczny z mapą jest odrzucany, a profil TL (bez M) oferuje tylko ustawienia zweryfikowane na tym modelu.",
         "data": {
           "model": "Model"
         },
@@ -64,7 +64,8 @@
       "unknown": "Nieoczekiwany błąd",
       "invalid_connection_settings": "Nieprawidłowe ustawienia połączenia. ID musi być liczbą całkowitą od 1 do 247, a port od 1 do 65535. Nazwa użytkownika nie może zawierać ':'. Nazwa użytkownika i hasło muszą używać znaków Latin-1.",
       "unsupported_device": "Brak obsługiwanych rejestrów dla tego ID falownika.",
-      "different_device": "Numer seryjny należy do innego urządzenia. Historia nie zostanie połączona."
+      "different_device": "Numer seryjny należy do innego urządzenia. Historia nie zostanie połączona.",
+      "model_mismatch": "Mapa falownika jest sprzeczna z wybranym modelem. Wybierz drugą generację."
     },
     "abort": {
       "already_configured": "Ten falownik jest już skonfigurowany",
@@ -495,9 +496,15 @@
     },
     "model": {
       "options": {
-        "iss": "ISS (firmware referencyjny ABH1007AE) — monitorowanie i sterowanie",
-        "storage_1play": "INGECON SUN STORAGE 1Play (mapa ABH1002) — monitorowanie i zweryfikowane ustawienia"
+        "iss": "INGECON SUN STORAGE 1Play TL M — 2 MPPT (firmware referencyjny ABH1007AE)",
+        "storage_1play": "INGECON SUN STORAGE 1Play TL — 1 MPPT, bez M (mapa ABH1002AL, eksperymentalny)"
       }
+    }
+  },
+  "issues": {
+    "profile_mismatch": {
+      "title": "Ingeteam: model falownika nie pasuje do jego mapy",
+      "description": "Mapa falownika **{title}** jest sprzeczna z wybranym modelem ({reason}). Elementy sterujące nie są tworzone, a każdy zapis jest odrzucany, dopóki nie wybierzesz właściwego modelu w *Zmień konfigurację*. Istniejące encje są zachowane."
     }
   }
 }

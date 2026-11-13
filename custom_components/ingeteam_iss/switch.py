@@ -59,6 +59,8 @@ STORAGE_1PLAY_SWITCHES: tuple[IngeteamSwitchDescription, ...] = (
         group=GROUP_BATTERY,
         icon="mdi:home-battery",
         entity_category=EntityCategory.CONFIG,
+        # Experimental: disabled by default until the review checks are done.
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -70,6 +72,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up writable switches."""
     profile = entry.runtime_data.profile
+    if entry.runtime_data.profile_conflict is not None:
+        return
     descriptions = (
         STORAGE_1PLAY_SWITCHES if profile.key == MODEL_STORAGE_1PLAY else SWITCHES
     )
@@ -94,6 +98,9 @@ class IngeteamSwitch(IngeteamEntity, SwitchEntity):
         super().__init__(coordinator, description.register, description.group)
         self.entity_description = description
         self._attr_unique_id = f"{self._serial}_{description.key}"
+
+    def _write_fields(self):
+        return ((self.register.address, self.register.startbit, 0, 1),)
 
     @property
     def available(self) -> bool:

@@ -13,7 +13,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 
@@ -28,10 +28,11 @@ from .const import (
     DEFAULT_PUBLISH_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SSE_TIMEOUT,
+    DOMAIN,
 )
 from .coordinator import IngeteamCoordinator
 from .entity import inverter_device_info
-from .models import CONF_MODEL, CONTROL_DOMAINS, MODEL_ISS
+from .models import CONF_MODEL, MODEL_ISS, profile_conflict
 
 type IngeteamConfigEntry = ConfigEntry[IngeteamCoordinator]
 
@@ -87,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IngeteamConfigEntry) -> 
     )
     entry.runtime_data = coordinator
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-    _async_remove_unsupported_entities(hass, entry, coordinator)
+    _async_check_profile(hass, entry, coordinator)
     await hass.config_entries.async_forward_entry_setups(
         entry, coordinator.profile.platforms
     )
@@ -100,32 +101,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: IngeteamConfigEntry) -> 
     return True
 
 
-def _async_remove_unsupported_entities(
+def _async_check_profile(
     hass: HomeAssistant, entry: ConfigEntry, coordinator: IngeteamCoordinator
 ) -> None:
-    """Drop entities a restricted profile never creates (e.g. ISS controls).
+    """Block controls and writes when the device map contradicts the profile.
 
-    They would otherwise stay registered as unavailable controls that, on a
-    STORAGE 1Play, point at registers with a different meaning.
+    Runs on every setup, so entries created before model selection and
+    profiles chosen by mistake are caught too. Entities are never removed:
+    they stay registered (with their customisations) but no control is
+    created and the coordinator refuses every write.
     """
-    profile = coordinator.profile
-    if profile.control_keys is None and not profile.retired_keys:
-        return  # The ISS profile keeps its full, original entity set.
-    registry = er.async_get(hass)
-    prefix = f"{coordinator.identity}_"
-    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
-        key = entity.unique_id.removeprefix(prefix)
-        unsupported_control = (
-            entity.domain in CONTROL_DOMAINS
-            and profile.control_keys is not None
-            and key not in profile.control_keys
-        )
-        if (
-            entity.domain not in profile.platforms
-            or unsupported_control
-            or key in profile.retired_keys
-        ):
-            registry.async_remove(entity.entity_id)
+    issue_id = f"profile_mismatch_{entry.entry_id}"
+    reason = profile_conflict(entry.data.get(CONF_MODEL), coordinator.api.capabilities)
+    coordinator.profile_conflict = reason
+    if reason is None:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+        return
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="profile_mismatch",
+        translation_placeholders={"title": entry.title, "reason": reason},
+    )
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

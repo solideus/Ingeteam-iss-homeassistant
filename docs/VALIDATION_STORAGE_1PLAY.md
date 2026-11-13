@@ -8,7 +8,8 @@ describe el perfil, y a la [validación general](VALIDATION.md).
 
 | Elemento | Valor |
 |---|---|
-| Inversor | INGECON SUN STORAGE 1Play, monofásico, con batería (Pylontech Force H1/H2 por BMS) |
+| Inversor | INGECON SUN STORAGE 1Play **6TL**, generación TL sin M (1 MPPT), monofásico, con batería (Pylontech Force H1/H2 por BMS) |
+| Cableado | Toda la vivienda conectada a la salida de cargas (*AC Loads*) del inversor |
 | Tarjeta de comunicaciones | `HwType` AAX0077, `CommsVersion` ACO1200_A, `ApiVersion` 102 |
 | Firmware de comunicaciones | AAX1055DC (fecha 2026-10-13) |
 | Mapa del inversor | `compatible.firmware` = ABH1002AL |
@@ -40,6 +41,11 @@ misma entidad y el mismo servicio que usaría un usuario:
 
 Si una comprobación fallaba, la prueba se detenía antes de pasar al
 siguiente ajuste. No falló ninguna.
+
+**Alcance:** estas pruebas confirman que el inversor acepta el valor, lo
+devuelve y lo conserva, y que se restaura igual. No demuestran todo su efecto
+operativo; por ejemplo, no se esperó a que la batería llegara a un límite de
+SOC. Por eso los controles están deshabilitados por defecto.
 
 ## Ajustes validados
 
@@ -82,8 +88,9 @@ Detalles de cada prueba:
 | Algoritmos de calidad de red (Pac/Qac/cos φ, LVRT/HVRT) | 13–16, 146–242 | Ajustes de instalador sujetos a normativa |
 | Registros que el ISS usa para otros controles | 58, 59, 60, 63, 86, 119, 130… | En el 1Play significan otra cosa (umbral de una salida digital, tiempo de absorción, tiempo de parada por tensión mínima…) |
 
-Las entidades del ISS que una entrada anterior hubiera dejado se eliminan al
-arrancar con el perfil 1Play.
+Las entidades que el perfil no crea, por ejemplo las de una entrada anterior
+con el perfil TL M, no se eliminan: se conservan con sus personalizaciones,
+sin ningún control detrás.
 
 ## Lecturas validadas
 
@@ -112,6 +119,12 @@ El sensor binario *Reducción de potencia* se activa con el motivo 7
 autoconsumo. No es una avería.
 
 ## Pendiente
+
+- Comparar la energía con series simultáneas frente a la lectura Modbus en
+  cuatro escenarios (producción solar, descarga nocturna, carga desde red y
+  exportación), con los intervalos alineados y los huecos marcados. La
+  comparación diaria de arriba no basta para atribuir las diferencias a los
+  reinicios.
 
 - Ver una alarma real activarse y resolverse, para validar el evento
   `ingeteam_iss_alarm` de extremo a extremo. Hasta ahora no ha saltado

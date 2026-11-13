@@ -49,7 +49,7 @@
       },
       "model": {
         "title": "Modello di inverter",
-        "description": "Rilevato dalla mappa dell'inverter: {detected}. Il profilo STORAGE 1Play offre solo le impostazioni validate su quel modello; i controlli ISS non vengono creati perché i suoi registri hanno significati diversi.",
+        "description": "Rilevato dalla mappa dell'inverter: {detected}. Sono due generazioni dell'INGECON SUN STORAGE 1Play con registri diversi. Un modello che contraddice la mappa viene rifiutato e il profilo TL (senza M) offre solo le impostazioni validate su quel modello.",
         "data": {
           "model": "Modello"
         },
@@ -64,7 +64,8 @@
       "unknown": "Errore imprevisto",
       "invalid_connection_settings": "Impostazioni di connessione non valide. L’ID deve essere un intero da 1 a 247 e la porta da 1 a 65535. Il nome utente non può contenere ':'. Nome utente e password devono usare caratteri Latin-1.",
       "unsupported_device": "Nessun registro compatibile trovato per questo ID inverter.",
-      "different_device": "Il numero di serie appartiene a un altro dispositivo. Le cronologie non saranno unite."
+      "different_device": "Il numero di serie appartiene a un altro dispositivo. Le cronologie non saranno unite.",
+      "model_mismatch": "La mappa dell'inverter contraddice il modello scelto. Scegli l'altra generazione."
     },
     "abort": {
       "already_configured": "Questo inverter è già configurato",
@@ -495,9 +496,15 @@
     },
     "model": {
       "options": {
-        "iss": "ISS (firmware di riferimento ABH1007AE) — monitoraggio e controlli",
-        "storage_1play": "INGECON SUN STORAGE 1Play (mappa ABH1002) — monitoraggio e impostazioni validate"
+        "iss": "INGECON SUN STORAGE 1Play TL M — 2 MPPT (firmware di riferimento ABH1007AE)",
+        "storage_1play": "INGECON SUN STORAGE 1Play TL — 1 MPPT, senza M (mappa ABH1002AL, sperimentale)"
       }
+    }
+  },
+  "issues": {
+    "profile_mismatch": {
+      "title": "Ingeteam: il modello dell'inverter non corrisponde alla sua mappa",
+      "description": "La mappa dell'inverter di **{title}** contraddice il modello scelto ({reason}). Non vengono creati controlli e ogni scrittura viene rifiutata finché non si sceglie il modello corretto con *Riconfigura*. Le entità esistenti vengono conservate."
     }
   }
 }

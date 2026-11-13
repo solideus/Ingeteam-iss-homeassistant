@@ -93,6 +93,8 @@ STORAGE_1PLAY_SELECTS: tuple[IngeteamSelectDescription, ...] = (
         group=GROUP_BATTERY,
         options=("pv_then_grid", "grid_only"),
         entity_category=EntityCategory.CONFIG,
+        # Experimental: disabled by default until the review checks are done.
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -104,6 +106,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up battery-use selectors."""
     profile = entry.runtime_data.profile
+    if entry.runtime_data.profile_conflict is not None:
+        return
     descriptions = (
         STORAGE_1PLAY_SELECTS if profile.key == MODEL_STORAGE_1PLAY else SELECTS
     )
@@ -128,6 +132,10 @@ class IngeteamSelect(IngeteamEntity, SelectEntity):
         super().__init__(coordinator, description.register, description.group)
         self.entity_description = description
         self._attr_unique_id = f"{self._serial}_{description.key}"
+
+    def _write_fields(self):
+        last = len(self.entity_description.options) - 1
+        return ((self.register.address, self.register.startbit, 0, last),)
 
     @property
     def available(self) -> bool:

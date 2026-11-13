@@ -1,11 +1,12 @@
-# INGECON SUN STORAGE 1Play profile
+# INGECON SUN STORAGE 1Play TL (without M) profile
 
-Status: **experimental, monitoring only.** Reported in issue #7 and validated on
-one installation (single-phase, with battery):
+Status: **experimental.** Monitoring, plus eight settings validated on one
+inverter and disabled by default. Reported in issue #7; observed on one
+installation (single-phase, with battery, whole house on the AC loads output):
 
 | Item | Value |
 |---|---|
-| Inverter | INGECON SUN STORAGE 1Play |
+| Inverter | INGECON SUN STORAGE 1Play **6TL**, generation TL without M (1 MPPT) |
 | Comms card | `HwType` AAX0077, `CommsVersion` ACO1200_A, `ApiVersion` 102 |
 | Comms firmware | AAX1055DC (dated 2026-10-13; apparently a remote update) |
 | Inverter map | `compatible.firmware` = **ABH1002AL** |
@@ -13,8 +14,11 @@ one installation (single-phase, with battery):
 
 ## Why a separate profile
 
-The 1Play map is a different, older generation from the ISS 6TL reference
-(ABH1007AE). Many addresses exist in both maps with different meanings, so
+Both are INGECON SUN STORAGE 1Play inverters. The integration was developed on
+the **1Play TL M** (2 MPPT, presented in 2020; reference 6TL M with portal
+firmware ABH1007AE and internal map ABH1006AC). This profile is for the
+earlier **1Play TL without M** (1 MPPT, map ABH1002AL); it may also have two PV
+connectors, so counting inputs does not tell them apart. Many addresses exist in both maps with different meanings, so
 **the ISS controls must never be used on a 1Play**. A few examples from the
 maps:
 
@@ -28,11 +32,18 @@ maps:
 
 The profile therefore:
 
-- loads `sensor`, `binary_sensor` and `number` only, and creates just the
-  controls listed in its `control_keys` (see *Settings* below); it reads only
-  those holding registers;
-- removes, at setup, entities a previous ISS-profile entry left behind
-  (controls and `pv_1_power`/`pv_2_power`);
+- is only accepted when the device map identifies a TL without M (field
+  signatures: HR58 *Low battery voltage value for digital output*, HR86
+  *Duration of Absorption charge*, HR130 *Time for Minimum voltage*, IR36
+  *Grid/Genset Frequency*) and every control has its expected label; the TL M
+  profile is refused on such a map. This runs in setup, reconfiguration and
+  on every start, including entries created before model selection;
+- creates just the controls listed in its `control_keys` (see *Settings*),
+  disabled by default, and reads only their holding registers;
+- writes are checked in the coordinator before any request: address, bit and
+  value must belong to an enabled control of the profile;
+- never removes entities: anything the profile does not create stays
+  registered with its customisations, without a control behind it;
 - reads every online register the device map declares and decodes alarms and
   states with the labels of that map.
 

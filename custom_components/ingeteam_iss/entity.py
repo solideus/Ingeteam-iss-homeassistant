@@ -67,6 +67,21 @@ class IngeteamEntity(CoordinatorEntity[EntityCoordinator]):
                 via_device=parent_identifier,
             )
 
+    def _write_fields(self) -> tuple[tuple[int, int, int, int], ...]:
+        """(address, bit, minimum, maximum) this control may write."""
+        return ()
+
+    async def async_added_to_hass(self) -> None:
+        """Only controls actually added (enabled) may write their fields."""
+        await super().async_added_to_hass()
+        for address, bit, minimum, maximum in self._write_fields():
+            self.coordinator.allow_write(address, bit, minimum, maximum)
+
+    async def async_will_remove_from_hass(self) -> None:
+        for address, bit, _minimum, _maximum in self._write_fields():
+            self.coordinator.writable_fields.pop((address, bit), None)
+        await super().async_will_remove_from_hass()
+
     @property
     def available(self) -> bool:
         """Do not offer controls for missing or inconsistent holding fields."""
