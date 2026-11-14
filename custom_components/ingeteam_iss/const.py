@@ -24,8 +24,6 @@ CONF_PUBLISH_INTERVAL = "publish_interval"
 DEFAULT_PUBLISH_INTERVAL = "sse"
 REFERENCE_FIRMWARE = "ABH1007AE"
 
-PLATFORMS = ["sensor", "binary_sensor", "number", "switch", "select", "time"]
-
 GROUP_BATTERY = "battery"
 GROUP_GRID_CHARGE = "grid_charge"
 GROUP_SCHEDULED_DISCHARGE = "scheduled_discharge"
@@ -47,25 +45,3 @@ class Register:
 
     address: int
     startbit: int = 0
-
-
-# These ranges cover only the selected user-facing controls.
-HOLDING_RANGES = (
-    {"address": 58, "length": 8},
-    {"address": 86, "length": 1},
-    {"address": 100, "length": 1},
-    {"address": 117, "length": 17},
-    {"address": 142, "length": 1},
-)
-
-# Only telemetry not provided by the selected SSE event. This endpoint returns
-# raw scaled values; /properties/read returns already-decoded values instead.
-ONLINE_RANGES = (
-    {"address": 9, "length": 7},
-    {"address": 26, "length": 4},
-    {"address": 40, "length": 3},
-    {"address": 68, "length": 1},
-    {"address": 73, "length": 5},
-    {"address": 18, "length": 1},
-    {"address": 33, "length": 4},
-)

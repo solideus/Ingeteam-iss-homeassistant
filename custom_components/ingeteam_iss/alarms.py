@@ -2,17 +2,11 @@
 
 from .sse import finite_number
 
-ALARM_FIELDS = {
-    10: "inverter_alarm",
-    12: "inverter_code_1",
-    13: "inverter_code_2",
-    14: "inverter_code_3",
-    28: "battery_alarm",
-    73: "bms_warning",
-    74: "bms_error",
-    75: "bms_fault",
-    76: "bms_protection",
-}
+
+def _default_alarm_fields():
+    from .profiles import get_profile
+
+    return get_profile().alarm_fields
 
 
 def raw_integer(value):
@@ -53,14 +47,22 @@ def label_for(mapping: dict, address: int, code: int, language: str) -> str | No
 
 
 def decode_alarms(
-    online: dict, mapping: dict, language="en"
+    online: dict, mapping: dict, language="en", fields=None, hex_widths=None
 ) -> tuple[list[dict], dict]:
     alarms, raw = [], {}
-    for address, category in ALARM_FIELDS.items():
+    if fields is None:
+        from .profiles import get_profile
+
+        profile = get_profile()
+        fields = profile.alarm_fields
+        if hex_widths is None:
+            hex_widths = profile.alarm_hex_widths
+    hex_widths = hex_widths or {}
+    for address, category in fields.items():
         value = raw_integer(online.get((address, 0)))
         if value is None:
             continue
-        raw[category] = f"0x{value:08X}" if address == 10 else f"0x{value:04X}"
+        raw[category] = f"0x{value:0{hex_widths.get(address, 4)}X}"
         for bit in range(value.bit_length()):
             if value & (1 << bit):
                 label = label_for(mapping, address, bit, language)
@@ -87,3 +89,9 @@ def flow_state(value, positive, negative, threshold=10):
     if value is None:
         return None
     return positive if value > threshold else negative if value < -threshold else "idle"
+
+
+def __getattr__(name):
+    if name == "ALARM_FIELDS":
+        return _default_alarm_fields()
+    raise AttributeError(name)

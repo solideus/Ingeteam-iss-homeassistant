@@ -1,8 +1,6 @@
 # Validación y prueba de instalación
 
-Para las correcciones y pruebas de la versión actual, consulta
-[la validación de 0.5.3](VERSION_0.5.3.md). Los resultados siguientes documentan
-la validación histórica de 0.4.0.
+Para la base de perfiles en desarrollo, consulta [la validación de 0.6.0](VERSION_0.6.0.md). La referencia publicada continúa siendo [0.5.3](VERSION_0.5.3.md). Los resultados siguientes documentan la validación histórica de 0.4.0.
 
 ## Comprobación automatizada
 
@@ -132,6 +130,4 @@ Que los tests pasen no demuestra estabilidad prolongada sobre el inversor,
 precisión fiscal de las energías ni ejecución física de una calibración BMS.
 Tampoco demuestra compatibilidad con otros modelos/mapas.
 
-La publicación en GitHub, validación externa HACS/Hassfest y prueba de
-instalación desde HACS siguen pendientes. No se ha creado ni publicado un
-repositorio en esta entrega.
+La referencia histórica anterior a la primera publicación ya está superada: el repositorio está publicado y la integración figura en HACS defaults. Las comprobaciones de cada nueva versión se documentan por separado.

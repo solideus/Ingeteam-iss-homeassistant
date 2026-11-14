@@ -33,7 +33,16 @@ from .const import (
     DEFAULT_SSE_TIMEOUT,
     DOMAIN,
 )
+from .profiles import CONF_PROFILE, DEFAULT_PROFILE_ID, PROFILES, get_profile
+from .profiles.base import UnsupportedProfileError
 from .values import bounded_integer
+
+
+async def _async_validate_connection(api: IngeteamApi) -> bool:
+    """Validate the profile's primary HTTP channel, including read-only profiles."""
+    if api.profile.holding_ranges:
+        return bool(await api.async_read_holding())
+    return bool(await api.async_read_online())
 
 
 class IngeteamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -62,6 +71,7 @@ class IngeteamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
             host = user_input[CONF_HOST].strip()
             try:
+                profile = get_profile(user_input.get(CONF_PROFILE))
                 api = IngeteamApi(
                     async_get_clientsession(self.hass),
                     host,
@@ -69,13 +79,17 @@ class IngeteamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                     port=user_input[CONF_PORT],
                     device_id=user_input[CONF_DEVICE_ID],
+                    profile=profile,
                 )
                 info = await api.async_device_info()
-                holding = await api.async_read_holding()
-                if not holding:
+                await api.async_load_capabilities()
+                profile.validate_map(api.capabilities)
+                if not await _async_validate_connection(api):
                     raise IngeteamConnectionError(
                         "No supported inverter registers returned"
                     )
+            except UnsupportedProfileError:
+                errors["base"] = "unsupported_profile"
             except IngeteamAuthError:
                 errors["base"] = "invalid_auth"
             except IngeteamConnectionError:
@@ -89,6 +103,7 @@ class IngeteamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(serial)
                 self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 user_input[CONF_HOST] = host
+                user_input[CONF_PROFILE] = profile.id
                 user_input["identity"] = serial
                 if info.get("SerialNumber"):
                     user_input["device_serial"] = str(info["SerialNumber"])
@@ -139,6 +154,11 @@ class IngeteamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 candidate[CONF_DEVICE_ID] = bounded_integer(
                     candidate.get(CONF_DEVICE_ID, 1), 1, 247
                 )
+                profile = get_profile(candidate.get(CONF_PROFILE))
+                if profile.id != get_profile(entry.data.get(CONF_PROFILE)).id:
+                    raise UnsupportedProfileError(
+                        "Changing an entry profile requires migration"
+                    )
                 api = IngeteamApi(
                     async_get_clientsession(self.hass),
                     candidate[CONF_HOST],
@@ -146,10 +166,12 @@ class IngeteamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     candidate[CONF_PASSWORD],
                     port=candidate[CONF_PORT],
                     device_id=candidate[CONF_DEVICE_ID],
+                    profile=profile,
                 )
                 info = await api.async_device_info()
-                holding = await api.async_read_holding()
-                if not holding:
+                await api.async_load_capabilities()
+                profile.validate_map(api.capabilities)
+                if not await _async_validate_connection(api):
                     errors["base"] = "unsupported_device"
                 elif (entry.data.get("device_serial") or entry.unique_id) not in (
                     None,
@@ -157,6 +179,8 @@ class IngeteamConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     str(info.get("SerialNumber")),
                 ):
                     errors["base"] = "different_device"
+            except UnsupportedProfileError:
+                errors["base"] = "unsupported_profile"
             except IngeteamAuthError:
                 errors["base"] = "invalid_auth"
             except IngeteamConnectionError:
@@ -222,6 +246,9 @@ def _user_schema() -> vol.Schema:
     """Use a typed number box for node selection, with the usual node 1."""
     return vol.Schema(
         {
+            vol.Optional(CONF_PROFILE, default=DEFAULT_PROFILE_ID): SelectSelector(
+                SelectSelectorConfig(options=list(PROFILES), translation_key="profile")
+            ),
             vol.Required(CONF_HOST): str,
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): TextSelector(

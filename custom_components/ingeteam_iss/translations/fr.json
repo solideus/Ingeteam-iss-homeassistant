@@ -10,10 +10,12 @@
           "password": "Mot de passe",
           "port": "Port HTTP",
           "device_id": "Identifiant de l’onduleur",
-          "publish_interval": "Fréquence de mise à jour"
+          "publish_interval": "Fréquence de mise à jour",
+          "profile": "Modèle d’onduleur"
         },
         "data_description": {
-          "publish_interval": "SSE actualise dès réception des données. Les autres intervalles limitent la publication, pas la réception ni le calcul énergétique."
+          "publish_interval": "SSE actualise dès réception des données. Les autres intervalles limitent la publication, pas la réception ni le calcul énergétique.",
+          "profile": "Cette version prend uniquement en charge le profil TL M. Le précédent 1Play TL sans M nécessite un autre profil."
         }
       },
       "reconfigure": {
@@ -53,7 +55,8 @@
       "unknown": "Erreur inattendue",
       "invalid_connection_settings": "Paramètres de connexion invalides. L’identifiant doit être un entier de 1 à 247 et le port de 1 à 65535. Le nom d’utilisateur ne peut pas contenir « : ». Le nom d’utilisateur et le mot de passe doivent utiliser des caractères Latin-1.",
       "unsupported_device": "Aucun registre compatible trouvé pour cet identifiant d’onduleur.",
-      "different_device": "Le numéro de série correspond à un autre appareil. Les historiques ne seront pas mélangés."
+      "different_device": "Le numéro de série correspond à un autre appareil. Les historiques ne seront pas mélangés.",
+      "unsupported_profile": "Le profil sélectionné est inconnu ou la table de registres identifie un modèle non pris en charge. Aucun réglage n’a été écrit."
     },
     "abort": {
       "already_configured": "Cet onduleur est déjà configuré",
@@ -371,6 +374,11 @@
         "10": "Toutes les 10 secondes",
         "30": "Toutes les 30 secondes",
         "sse": "Temps réel — SSE (rythme de l’onduleur)"
+      }
+    },
+    "profile": {
+      "options": {
+        "tl_m": "INGECON SUN STORAGE 1Play TL M — 2 MPPT (testé sur 6TL M)"
       }
     }
   }

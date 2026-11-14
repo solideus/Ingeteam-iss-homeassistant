@@ -1,13 +1,32 @@
-# Ingeteam ISS para Home Assistant — 0.5.3
+# Ingeteam ISS para Home Assistant — 0.6.0 en desarrollo
 
-[English](README.md) · [Instalación y pruebas](docs/VALIDATION.md) · [Telemetría y energía](docs/TELEMETRY_ENERGY.md) · [Publicación](docs/PUBLISHING.md)
+[English](README.md) · [Instalación y pruebas](docs/VALIDATION.md) · [Telemetría y energía](docs/TELEMETRY_ENERGY.md) · [Publicación](docs/PUBLISHING.md) · [Perfiles](docs/PROFILES.md) · [Hoja de ruta](docs/ROADMAP.md)
 
-Integración local **no oficial** para el Ingeteam INGECON SUN STORAGE ISS 6TL.
-La versión 0.5.3 corrige la asignación horaria del balance en el panel de Energía,
-la restauración de cierres pendientes y la gestión de alarmas, lecturas inválidas
-y credenciales. Conserva los controles, horarios, grupos, identificadores y
-precisión interna. No necesita Node-RED, MQTT ni servicios en la nube.
-No escribe parámetros durante la instalación.
+Integración local **no oficial** para el **INGECON SUN STORAGE 1Play TL M —
+2 MPPT**, con el **6TL M** y firmware de portal **ABH1007AE** como referencia
+comprobada. No necesita Node-RED, MQTT ni servicios en la nube. No escribe
+parámetros durante la instalación.
+
+**Esta rama prepara 0.6.0; no es una versión estable publicada.** Extrae el
+comportamiento existente del TL M a un perfil antes de añadir otros inversores.
+La referencia publicada sigue siendo v0.5.3. Falta comprobar físicamente esta
+reorganización: consulta [alcance y validación de 0.6.0](docs/VERSION_0.6.0.md).
+
+## Perfiles de modelo
+
+Solo se incluye **`tl_m` — INGECON SUN STORAGE 1Play TL M — 2 MPPT**. Las
+entradas anteriores sin perfil mantienen ese comportamiento, sus identidades y
+energía almacenada. No hay que recrear entidades ni la entrada de integración.
+
+El **1Play TL — 1 MPPT, sin M**, de la generación anterior, no queda soportado
+en esta versión. La investigación del [PR #8](https://github.com/solideus/Ingeteam-iss-homeassistant/pull/8)
+se conserva para una aportación posterior y separada. Contar conectores FV no
+identifica un TL M: el modelo anterior también puede tener dos entradas y un solo MPPT.
+
+Los nuevos modelos tendrán sus propias definiciones de registros, telemetría,
+entidades y estados. La infraestructura compartida sigue necesitando pruebas de
+regresión; los perfiles no garantizan aislamiento absoluto. Consulta la
+[guía para aportar perfiles](docs/PROFILES.md).
 
 ## Requisitos y acceso
 
@@ -204,19 +223,23 @@ modifica tus dashboards, YAML ni entidades antiguas.
    de Energía o retirar la monitorización anterior.
 
 En una instalación nueva, añade Ingeteam ISS desde Dispositivos y servicios.
-Introduce host sin `http://`, usuario Instalador y contraseña. El ID del inversor
+El alta ofrece el único perfil registrado, TL M. Introduce host sin `http://`,
+usuario Instalador y contraseña. Reconfigurar conserva el perfil existente. El ID del inversor
 es un campo de escritura numérica, **1 por defecto**, entero de 1 a 247.
 Los horarios se interpretan con el reloj local del inversor.
 
-Para volver a la 0.3.0, restaura únicamente la carpeta guardada y reinicia.
-Las entidades añadidas en 0.4.0 dejarán de actualizar. No borres la integración
-ni sus datos internos si deseas conservar los acumuladores para volver a 0.4.0.
+Para revertir una actualización, conserva una copia completa de Home Assistant
+que permita restaurar coherentemente código, configuración y datos si hace falta.
+No borres la entrada ni edites el almacén energético. Las antiguas instrucciones
+de sustitución de carpeta para 0.3/0.4 no son un procedimiento general para volver
+desde versiones posteriores.
 
 ## Alcance y publicación
 
 Se conservan las funciones ya probadas en la 0.3.0. Las novedades de 0.4.0 están
 verificadas con pruebas automatizadas, escenarios sintéticos anonimizados en un
 simulador y una primera prueba prolongada en el inversor físico de referencia.
+Ese antecedente no acredita todavía la validación física de la reorganización 0.6.0.
 
 El SSE de fases representa el agregado de la instalación. Esta versión se
 dirige a **un inversor ISS por tarjeta de comunicación**. No anuncia soporte

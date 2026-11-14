@@ -27,10 +27,11 @@ from .const import (
     DEFAULT_PUBLISH_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SSE_TIMEOUT,
-    PLATFORMS,
 )
 from .coordinator import IngeteamCoordinator
 from .entity import inverter_device_info
+from .profiles import CONF_PROFILE, get_profile
+from .profiles.base import UnsupportedProfileError
 
 type IngeteamConfigEntry = ConfigEntry[IngeteamCoordinator]
 
@@ -40,6 +41,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IngeteamConfigEntry) -> 
     time_zone = await dt_util.async_get_time_zone(hass.config.time_zone)
     if time_zone is None:
         raise ConfigEntryNotReady("Unable to resolve the configured time zone")
+    try:
+        profile = get_profile(entry.data.get(CONF_PROFILE))
+    except UnsupportedProfileError as err:
+        raise ConfigEntryNotReady(str(err)) from err
     api = IngeteamApi(
         async_get_clientsession(hass),
         entry.data[CONF_HOST],
@@ -47,6 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IngeteamConfigEntry) -> 
         entry.data[CONF_PASSWORD],
         port=entry.data.get(CONF_PORT, DEFAULT_PORT),
         device_id=entry.data.get(CONF_DEVICE_ID, DEFAULT_DEVICE_ID),
+        profile=profile,
     )
     coordinator = IngeteamCoordinator(
         hass,
@@ -65,9 +71,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IngeteamConfigEntry) -> 
     try:
         coordinator.device_info = await api.async_device_info()
         await api.async_load_capabilities()
+        profile.validate_map(api.capabilities)
     except IngeteamAuthError as err:
         raise ConfigEntryAuthFailed(str(err)) from err
-    except IngeteamApiError as err:
+    except (IngeteamApiError, UnsupportedProfileError) as err:
         raise ConfigEntryNotReady(str(err)) from err
     coordinator.identity = (
         entry.data.get("identity")
@@ -84,7 +91,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IngeteamConfigEntry) -> 
     )
     entry.runtime_data = coordinator
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, profile.platforms)
     entry.async_on_unload(
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, coordinator.telemetry.async_stop
@@ -107,7 +114,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: IngeteamConfigEntry) -> bool:
     """Unload a config entry."""
-    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+    if not await hass.config_entries.async_unload_platforms(
+        entry, entry.runtime_data.profile.platforms
+    ):
         return False
     await entry.runtime_data.telemetry.async_stop()
     return True

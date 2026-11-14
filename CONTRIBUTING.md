@@ -2,8 +2,22 @@
 
 Report bugs and proposals through the repository Issues.
 Include the Home Assistant and integration versions, inverter model/API version,
-steps to reproduce and sanitized logs. Compatibility is currently grounded in
-one ISS register map (API 102 / web 6.1.0).
+steps to reproduce and sanitized logs. Compatibility is grounded in the
+INGECON SUN STORAGE 1Play **6TL M — 2 MPPT**, reference portal firmware
+**ABH1007AE**, board ABH0101 (API 102 / web 6.1.0).
+
+Version 0.6.0 prepares a profile architecture with `tl_m` as the only production
+profile. Before adding a model, read [the profile contribution guide](docs/PROFILES.md)
+and [AGENTS.md](AGENTS.md). Put model-specific registers, entity descriptions,
+telemetry and state interpretation in its own profile directory. Add an explicit
+registry entry, tests, translations and documentation; do not edit `tl_m` or add
+model-name branches to common platforms. Changes to common infrastructure need
+separate review and regression evidence for the existing profile.
+
+The earlier 1Play TL without M is not supported merely by this refactor. PR #8
+is retained as research for a later contribution. Keep experimental work and its
+physical validation clearly identified; profile separation is not an absolute
+no-regression guarantee.
 
 Use Python 3.14.2 or later and install `requirements-test.txt` in a virtual
 environment. Run `python -m pytest -q`. Tests use real Home Assistant Core 2026.3.0
