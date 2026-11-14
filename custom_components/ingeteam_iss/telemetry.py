@@ -26,10 +26,8 @@ from .const import (
     DOMAIN,
     ENERGY_SAVE_INTERVAL,
     NET_CLOSE_OFFSET,
-    SSE_PHASE_EVENT,
 )
 from .energy import EnergyAccumulator
-from .sse import decode_telemetry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +46,8 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     ) -> None:
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}_sse", config_entry=config_entry)
         self.api = api
+        self.profile = api.profile
+        self._decoder = self.profile.create_decoder()
         self._entry = config_entry
         self.device_info: dict[str, Any] = {}
         self.timeout = timeout
@@ -206,6 +206,7 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.energy.break_interval()
         self.accounting.break_interval()
         self.latest_sample = {}
+        self._decoder.reset()
         self.async_set_updated_data({})
 
     async def _run(self) -> None:
@@ -222,10 +223,12 @@ class IngeteamTelemetryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                             self.connections += 1
                             async for event in events:
                                 self.last_received = dt_util.utcnow()
-                                sample = decode_telemetry(event)
+                                sample = self._decoder.decode(
+                                    event, self.hass.loop.time()
+                                )
                                 if sample is None:
                                     self.discarded_frames += 1
-                                    if event.event == SSE_PHASE_EVENT:
+                                    if self._decoder.is_sample_event(event):
                                         self.energy.break_interval()
                                         self.accounting.break_interval()
                                     continue

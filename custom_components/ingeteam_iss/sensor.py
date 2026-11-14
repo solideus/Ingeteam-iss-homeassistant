@@ -2,96 +2,29 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import datetime
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
-    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    PERCENTAGE,
     EntityCategory,
-    UnitOfElectricCurrent,
-    UnitOfElectricPotential,
     UnitOfEnergy,
-    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .accounting import ACCOUNTING_KEYS
-from .alarms import flow_state
 from .const import ENERGY_PUBLISH_INTERVAL, GROUP_ENERGY, Register
 from .coordinator import IngeteamCoordinator
 from .diagnostics import telemetry_diagnostics
 from .energy import ENERGY_SOURCES
 from .entity import IngeteamEntity
+from .profiles.descriptions import FlowStateDescription, IngeteamSensorDescription
 from .values import scaled_sum
-
-
-@dataclass(frozen=True, kw_only=True)
-class IngeteamSensorDescription(SensorEntityDescription):
-    """SSE readings are decoded; remaining online registers require scaling."""
-
-    register: Register = Register(0)
-    divisor: float = 1.0
-    sse: bool = True
-
-
-def power_description(
-    key: str, *, register: Register = Register(0), sse: bool = True
-) -> IngeteamSensorDescription:
-    return IngeteamSensorDescription(
-        key=key,
-        translation_key=key,
-        register=register,
-        sse=sse,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-    )
-
-
-SENSORS: tuple[IngeteamSensorDescription, ...] = (
-    power_description("pv_total_power"),
-    IngeteamSensorDescription(
-        key="battery_soc",
-        translation_key="battery_soc",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.BATTERY,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    power_description("battery_power"),
-    IngeteamSensorDescription(
-        key="battery_voltage",
-        translation_key="battery_voltage",
-        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        device_class=SensorDeviceClass.VOLTAGE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    IngeteamSensorDescription(
-        key="battery_current",
-        translation_key="battery_current",
-        register=Register(18),
-        divisor=100,
-        sse=False,
-        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        device_class=SensorDeviceClass.CURRENT,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    power_description("pv_1_power", register=Register(33), sse=False),
-    power_description("pv_2_power", register=Register(36), sse=False),
-    power_description("total_load_power"),
-    power_description("external_grid_power"),
-    power_description("grid_import_power"),
-    power_description("grid_export_power"),
-    power_description("battery_charge_power"),
-    power_description("battery_discharge_power"),
-)
 
 
 async def async_setup_entry(
@@ -103,14 +36,12 @@ async def async_setup_entry(
     owner = entry.runtime_data
     async_add_entities(
         [
-            *(IngeteamSensor(owner, desc) for desc in SENSORS),
+            *(IngeteamSensor(owner, desc) for desc in owner.profile.sensors),
             *(IngeteamEnergySensor(owner, key) for key in ENERGY_SOURCES),
             *(IngeteamCalendarSensor(owner, key) for key in ACCOUNTING_KEYS),
-            IngeteamFlowSensor(owner, "grid_flow", ["importing", "exporting", "idle"]),
-            IngeteamFlowSensor(
-                owner,
-                "battery_flow",
-                ["charging", "discharging", "idle", "not_available"],
+            *(
+                IngeteamFlowSensor(owner, description)
+                for description in owner.profile.flow_states
             ),
             IngeteamAlarmSensor(owner),
             IngeteamSSEDiagnostics(owner),
@@ -137,7 +68,7 @@ class IngeteamSensor(IngeteamEntity, SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
-        if self.entity_description.key == "battery_current":
+        if self.entity_description.needs_battery:
             self.async_on_remove(
                 self.owner.telemetry.async_add_listener(self._handle_coordinator_update)
             )
@@ -157,9 +88,9 @@ class IngeteamSensor(IngeteamEntity, SensorEntity):
             )
         if not self.owner.last_update_success:
             return None
-        if self.entity_description.key == "battery_current" and (
+        if self.entity_description.needs_battery and (
             not self.owner.telemetry.connected
-            or self.owner.telemetry.data.get("battery_status") in (None, 7)
+            or not self.owner.profile.battery_available(self.owner.telemetry.data)
         ):
             return None
         return scaled_sum(
@@ -271,12 +202,12 @@ class IngeteamCalendarSensor(IngeteamEnergySensor):
 class IngeteamFlowSensor(IngeteamEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.ENUM
 
-    def __init__(self, owner, key, options):
+    def __init__(self, owner, description: FlowStateDescription):
         super().__init__(owner.telemetry, Register(0))
-        self._key = key
-        self._attr_options = options
-        self._attr_unique_id = f"{self._serial}_{key}"
-        self._attr_translation_key = key
+        self._description = description
+        self._attr_options = list(description.options)
+        self._attr_unique_id = f"{self._serial}_{description.key}"
+        self._attr_translation_key = description.key
 
     @property
     def available(self):
@@ -284,12 +215,7 @@ class IngeteamFlowSensor(IngeteamEntity, SensorEntity):
 
     @property
     def native_value(self):
-        data = self.coordinator.data or {}
-        if self._key == "grid_flow":
-            return flow_state(data.get("external_grid_power"), "importing", "exporting")
-        if data.get("battery_status") == 7:
-            return "not_available"
-        return flow_state(data.get("battery_power"), "discharging", "charging")
+        return self._description.evaluator(self.coordinator.data or {})
 
 
 class IngeteamAlarmSensor(IngeteamEntity, SensorEntity):

@@ -10,10 +10,12 @@
           "password": "Passwort",
           "port": "HTTP-Port",
           "device_id": "Wechselrichter-ID",
-          "publish_interval": "Aktualisierungsintervall"
+          "publish_interval": "Aktualisierungsintervall",
+          "profile": "Wechselrichtermodell"
         },
         "data_description": {
-          "publish_interval": "SSE aktualisiert sofort bei neuen Daten. Andere Intervalle begrenzen nur die Veröffentlichung, nicht Empfang oder Energieberechnung."
+          "publish_interval": "SSE aktualisiert sofort bei neuen Daten. Andere Intervalle begrenzen nur die Veröffentlichung, nicht Empfang oder Energieberechnung.",
+          "profile": "Diese Version unterstützt nur das Profil TL M. Der ältere 1Play TL ohne M benötigt ein eigenes Profil."
         }
       },
       "reconfigure": {
@@ -53,7 +55,8 @@
       "unknown": "Unerwarteter Fehler",
       "invalid_connection_settings": "Ungültige Verbindungseinstellungen. Die ID muss eine ganze Zahl von 1 bis 247 und der Port von 1 bis 65535 sein. Der Benutzername darf keinen Doppelpunkt enthalten. Benutzername und Passwort müssen Latin-1-Zeichen verwenden.",
       "unsupported_device": "Keine unterstützten Register für diese Wechselrichter-ID gefunden.",
-      "different_device": "Die Seriennummer gehört zu einem anderen Gerät. Historien werden nicht vermischt."
+      "different_device": "Die Seriennummer gehört zu einem anderen Gerät. Historien werden nicht vermischt.",
+      "unsupported_profile": "Das gewählte Profil ist unbekannt oder die Registertabelle bezeichnet ein nicht unterstütztes Modell. Es wurden keine Einstellungen geschrieben."
     },
     "abort": {
       "already_configured": "Dieser Wechselrichter ist bereits konfiguriert",
@@ -371,6 +374,11 @@
         "10": "Alle 10 Sekunden",
         "30": "Alle 30 Sekunden",
         "sse": "Echtzeit — SSE (Takt des Wechselrichters)"
+      }
+    },
+    "profile": {
+      "options": {
+        "tl_m": "INGECON SUN STORAGE 1Play TL M — 2 MPPT (getestet mit 6TL M)"
       }
     }
   }

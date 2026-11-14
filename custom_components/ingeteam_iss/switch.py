@@ -2,52 +2,15 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import GROUP_BATTERY, GROUP_GRID_EXPORT, Register
 from .coordinator import IngeteamCoordinator
 from .entity import IngeteamEntity
+from .profiles.descriptions import IngeteamSwitchDescription
 from .values import register_integer
-
-
-@dataclass(frozen=True, kw_only=True)
-class IngeteamSwitchDescription(SwitchEntityDescription):
-    """Writable bit-register description."""
-
-    register: Register
-    group: str
-
-
-SWITCHES: tuple[IngeteamSwitchDescription, ...] = (
-    IngeteamSwitchDescription(
-        key="bms_soc_calibration",
-        translation_key="bms_soc_calibration",
-        register=Register(132, 0),
-        group=GROUP_BATTERY,
-        icon="mdi:battery-sync",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    IngeteamSwitchDescription(
-        key="prioritize_grid_export",
-        translation_key="prioritize_grid_export",
-        register=Register(132, 12),
-        group=GROUP_GRID_EXPORT,
-        entity_category=EntityCategory.CONFIG,
-    ),
-    IngeteamSwitchDescription(
-        key="peak_shaving",
-        translation_key="peak_shaving",
-        register=Register(132, 14),
-        group=GROUP_GRID_EXPORT,
-        entity_category=EntityCategory.CONFIG,
-    ),
-)
 
 
 async def async_setup_entry(
@@ -58,7 +21,7 @@ async def async_setup_entry(
     """Set up writable switches."""
     async_add_entities(
         IngeteamSwitch(entry.runtime_data, desc)
-        for desc in SWITCHES
+        for desc in entry.runtime_data.profile.switches
         if entry.runtime_data.api.supports(
             "holding", desc.register.address, desc.register.startbit
         )

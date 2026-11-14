@@ -1,11 +1,30 @@
-# Ingeteam ISS for Home Assistant — 0.5.3
+# Ingeteam ISS for Home Assistant — 0.6.0 development
 
-[Español](README.es.md) · [Testing](docs/VALIDATION.md) · [Telemetry and energy](docs/TELEMETRY_ENERGY.md) · [Publishing](docs/PUBLISHING.md)
+[Español](README.es.md) · [Testing](docs/VALIDATION.md) · [Telemetry and energy](docs/TELEMETRY_ENERGY.md) · [Publishing](docs/PUBLISHING.md) · [Profiles](docs/PROFILES.md) · [Roadmap](docs/ROADMAP.md)
 
-Unofficial local integration for the Ingeteam INGECON SUN STORAGE ISS 6TL.
-Version 0.5.3 fixes hourly Energy dashboard attribution, restores pending calendar
-closures and hardens alarm coverage, register readings and initial configuration.
+Unofficial local integration for the **INGECON SUN STORAGE 1Play TL M — 2 MPPT**,
+with the **6TL M** and portal firmware **ABH1007AE** as the tested reference.
 No cloud, MQTT broker or Node-RED is required. Setup never writes inverter settings.
+
+**This branch prepares 0.6.0; it is not a published stable release.** It extracts
+the existing TL M behavior into a model profile before adding other inverters.
+The last published baseline is v0.5.3. Physical validation of the refactor remains
+pending; see [0.6.0 scope and validation](docs/VERSION_0.6.0.md).
+
+## Model profiles
+
+Only profile **`tl_m` — INGECON SUN STORAGE 1Play TL M — 2 MPPT** is included.
+Existing entries without a profile keep this behavior, their identities and stored
+energy. No entity or integration entry needs to be recreated.
+
+The earlier **1Play TL — 1 MPPT, without M** is not supported by this release.
+Its research in [PR #8](https://github.com/solideus/Ingeteam-iss-homeassistant/pull/8)
+will inform a later, separate contribution. Two PV connectors do not identify a
+TL M: the older generation may also have two inputs but only one MPPT.
+
+Future models must use their own register, telemetry, entity and state definitions.
+Shared infrastructure still needs regression testing; profiles do not guarantee
+absolute isolation. Contributors should follow the [profile guide](docs/PROFILES.md).
 
 ## Corrections in 0.5.3
 
@@ -176,8 +195,9 @@ This integration does not edit your dashboard, existing YAML or MQTT entities.
 4. Check SSE connectivity and follow the [test checklist](docs/VALIDATION.md).
 5. Select new Energy sources manually only after comparison.
 
-New setup asks for a host without a URL scheme/path, Installer username,
-password, HTTP port and a numeric inverter ID. The ID remains a **typed number
+New setup offers the sole registered TL M profile and asks for a host without a
+URL scheme/path, Installer username, password, HTTP port and a numeric inverter ID.
+Reconfiguration keeps the entry's existing profile. The ID remains a **typed number
 box**, default **1**, range 1–247. Times follow the inverter's local clock.
 
 Customized names and all prior unique IDs are preserved. Spanish, English,
@@ -185,17 +205,18 @@ French, German, Italian, Portuguese, Dutch and Polish cover setup, options,
 entities, groups and selector labels. Home Assistant's normal translation
 behavior applies; changing language does not change entity IDs.
 
-To roll back, restore the previous component directory and restart without
-deleting the integration entry or its stored totals. New 0.4.0 entities will
-stop updating until the newer version is restored.
+For rollback, keep a complete Home Assistant backup so code, configuration and
+stored data can be restored coherently if needed. Do not delete the integration
+entry or edit the energy store. Historical folder-only instructions for 0.3/0.4
+are not a general rollback procedure for later versions.
 
 ## Scope and publication
 
 Five observed operating modes are reproduced with sanitized synthetic fixtures
 by the automated suite using actual Home Assistant Core and a localhost
-HTTP/SSE simulator. The integration
-has also completed an initial extended physical test on the reference inverter.
-See [validation details](docs/VALIDATION.md).
+HTTP/SSE simulator. Earlier integration versions also completed an initial extended physical test on
+the reference inverter. This does not establish physical validation of the 0.6.0
+refactor. See [validation details](docs/VALIDATION.md).
 
 Supported scope is one ISS inverter per communication board; aggregate SSE is
 not per-node telemetry for multi-inverter installations. Existing board-serial

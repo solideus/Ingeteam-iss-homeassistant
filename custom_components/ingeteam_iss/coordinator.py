@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .alarms import ALARM_FIELDS, decode_alarms, raw_integer
+from .alarms import decode_alarms, raw_integer
 from .api import IngeteamApi, IngeteamApiError, IngeteamAuthError
 from .const import DEFAULT_SCAN_INTERVAL, DEFAULT_SSE_TIMEOUT, DOMAIN
 from .telemetry import IngeteamTelemetryCoordinator
@@ -41,6 +41,7 @@ class IngeteamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=config_entry,
         )
         self.api = api
+        self.profile = api.profile
         self.device_info: dict[str, Any] = {}
         self._operation_lock = asyncio.Lock()
         self.alarms: list[dict] = []
@@ -60,7 +61,11 @@ class IngeteamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         async with self._operation_lock:
             try:
-                holding = await self.api.async_read_holding()
+                holding = (
+                    await self.api.async_read_holding()
+                    if self.profile.holding_ranges
+                    else {}
+                )
             except IngeteamAuthError as err:
                 raise ConfigEntryAuthFailed(str(err)) from err
             except IngeteamApiError as err:
@@ -69,24 +74,33 @@ class IngeteamCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             try:
                 online = await self.api.async_read_online()
             except IngeteamApiError as err:
+                if not self.profile.holding_ranges:
+                    if isinstance(err, IngeteamAuthError):
+                        raise ConfigEntryAuthFailed(str(err)) from err
+                    raise UpdateFailed(str(err)) from err
                 _LOGGER.debug("Live telemetry update failed: %s", err)
                 online = {}
             alarms, self.raw_alarms = decode_alarms(
-                online, self.api.capabilities, self.hass.config.language
+                online,
+                self.api.capabilities,
+                self.hass.config.language,
+                self.profile.alarm_fields,
+                self.profile.alarm_hex_widths,
             )
             current = {(a["address"], a["bit"]): a for a in alarms}
             expected = {
                 address
-                for address in ALARM_FIELDS
+                for address in self.profile.alarm_fields
                 if self.api.supports("online", address)
             }
             valid_addresses = {
                 address
-                for address in ALARM_FIELDS
+                for address in self.profile.alarm_fields
                 if raw_integer(online.get((address, 0))) is not None
             }
             self.missing_alarm_categories = [
-                ALARM_FIELDS[address] for address in sorted(expected - valid_addresses)
+                self.profile.alarm_fields[address]
+                for address in sorted(expected - valid_addresses)
             ]
             self.alarm_coverage_complete = (
                 bool(expected) and not self.missing_alarm_categories
