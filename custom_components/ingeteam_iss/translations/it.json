@@ -10,10 +10,12 @@
           "password": "Password",
           "port": "Porta HTTP",
           "device_id": "ID inverter",
-          "publish_interval": "Frequenza di aggiornamento"
+          "publish_interval": "Frequenza di aggiornamento",
+          "profile": "Modello di inverter"
         },
         "data_description": {
-          "publish_interval": "SSE aggiorna appena arrivano i dati. Gli altri intervalli limitano la pubblicazione, non la ricezione o il calcolo energetico."
+          "publish_interval": "SSE aggiorna appena arrivano i dati. Gli altri intervalli limitano la pubblicazione, non la ricezione o il calcolo energetico.",
+          "profile": "Questa versione supporta solo il profilo TL M. Il precedente 1Play TL senza M richiede un altro profilo."
         }
       },
       "reconfigure": {
@@ -53,7 +55,8 @@
       "unknown": "Errore imprevisto",
       "invalid_connection_settings": "Impostazioni di connessione non valide. L’ID deve essere un intero da 1 a 247 e la porta da 1 a 65535. Il nome utente non può contenere ':'. Nome utente e password devono usare caratteri Latin-1.",
       "unsupported_device": "Nessun registro compatibile trovato per questo ID inverter.",
-      "different_device": "Il numero di serie appartiene a un altro dispositivo. Le cronologie non saranno unite."
+      "different_device": "Il numero di serie appartiene a un altro dispositivo. Le cronologie non saranno unite.",
+      "unsupported_profile": "Il profilo selezionato è sconosciuto o la mappa identifica un modello non supportato. Nessuna impostazione è stata scritta."
     },
     "abort": {
       "already_configured": "Questo inverter è già configurato",
@@ -371,6 +374,11 @@
         "10": "Ogni 10 secondi",
         "30": "Ogni 30 secondi",
         "sse": "Tempo reale — SSE (ritmo dell’inverter)"
+      }
+    },
+    "profile": {
+      "options": {
+        "tl_m": "INGECON SUN STORAGE 1Play TL M — 2 MPPT (provato su 6TL M)"
       }
     }
   }

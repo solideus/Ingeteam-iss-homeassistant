@@ -10,10 +10,12 @@
           "password": "Hasło",
           "port": "Port HTTP",
           "device_id": "ID falownika",
-          "publish_interval": "Częstotliwość aktualizacji"
+          "publish_interval": "Częstotliwość aktualizacji",
+          "profile": "Model falownika"
         },
         "data_description": {
-          "publish_interval": "SSE aktualizuje po otrzymaniu danych. Inne interwały ograniczają publikację, a nie odbiór ani obliczenia energii."
+          "publish_interval": "SSE aktualizuje po otrzymaniu danych. Inne interwały ograniczają publikację, a nie odbiór ani obliczenia energii.",
+          "profile": "Ta wersja obsługuje tylko profil TL M. Starszy 1Play TL bez M wymaga osobnego profilu."
         }
       },
       "reconfigure": {
@@ -53,7 +55,8 @@
       "unknown": "Nieoczekiwany błąd",
       "invalid_connection_settings": "Nieprawidłowe ustawienia połączenia. ID musi być liczbą całkowitą od 1 do 247, a port od 1 do 65535. Nazwa użytkownika nie może zawierać ':'. Nazwa użytkownika i hasło muszą używać znaków Latin-1.",
       "unsupported_device": "Brak obsługiwanych rejestrów dla tego ID falownika.",
-      "different_device": "Numer seryjny należy do innego urządzenia. Historia nie zostanie połączona."
+      "different_device": "Numer seryjny należy do innego urządzenia. Historia nie zostanie połączona.",
+      "unsupported_profile": "Wybrany profil jest nieznany lub mapa wskazuje nieobsługiwany model. Nie zapisano żadnych ustawień."
     },
     "abort": {
       "already_configured": "Ten falownik jest już skonfigurowany",
@@ -371,6 +374,11 @@
         "10": "Co 10 sekund",
         "30": "Co 30 sekund",
         "sse": "Na bieżąco — SSE (rytm falownika)"
+      }
+    },
+    "profile": {
+      "options": {
+        "tl_m": "INGECON SUN STORAGE 1Play TL M — 2 MPPT (sprawdzono na 6TL M)"
       }
     }
   }

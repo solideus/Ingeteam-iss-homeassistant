@@ -2,95 +2,17 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import time
 
-from homeassistant.components.time import TimeEntity, TimeEntityDescription
+from homeassistant.components.time import TimeEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import GROUP_GRID_CHARGE, GROUP_SCHEDULED_DISCHARGE, Register
 from .coordinator import IngeteamCoordinator
 from .entity import IngeteamEntity
+from .profiles.descriptions import IngeteamTimeDescription
 from .values import register_integer
-
-
-@dataclass(frozen=True, kw_only=True)
-class IngeteamTimeDescription(TimeEntityDescription):
-    """Writable hour/minute register description."""
-
-    register: Register
-    group: str
-
-
-TIMES: tuple[IngeteamTimeDescription, ...] = (
-    IngeteamTimeDescription(
-        key="grid_charge_schedule_1_start",
-        translation_key="grid_charge_schedule_1_start",
-        register=Register(117),
-        group=GROUP_GRID_CHARGE,
-        icon="mdi:clock-start",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    IngeteamTimeDescription(
-        key="grid_charge_schedule_1_end",
-        translation_key="grid_charge_schedule_1_end",
-        register=Register(118),
-        group=GROUP_GRID_CHARGE,
-        icon="mdi:clock-end",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    IngeteamTimeDescription(
-        key="grid_charge_schedule_2_start",
-        translation_key="grid_charge_schedule_2_start",
-        register=Register(61),
-        group=GROUP_GRID_CHARGE,
-        icon="mdi:clock-start",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    IngeteamTimeDescription(
-        key="grid_charge_schedule_2_end",
-        translation_key="grid_charge_schedule_2_end",
-        register=Register(62),
-        group=GROUP_GRID_CHARGE,
-        icon="mdi:clock-end",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    IngeteamTimeDescription(
-        key="battery_discharge_schedule_1_start",
-        translation_key="battery_discharge_schedule_1_start",
-        register=Register(120),
-        group=GROUP_SCHEDULED_DISCHARGE,
-        icon="mdi:clock-start",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    IngeteamTimeDescription(
-        key="battery_discharge_schedule_1_end",
-        translation_key="battery_discharge_schedule_1_end",
-        register=Register(121),
-        group=GROUP_SCHEDULED_DISCHARGE,
-        icon="mdi:clock-end",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    IngeteamTimeDescription(
-        key="battery_discharge_schedule_2_start",
-        translation_key="battery_discharge_schedule_2_start",
-        register=Register(64),
-        group=GROUP_SCHEDULED_DISCHARGE,
-        icon="mdi:clock-start",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    IngeteamTimeDescription(
-        key="battery_discharge_schedule_2_end",
-        translation_key="battery_discharge_schedule_2_end",
-        register=Register(65),
-        group=GROUP_SCHEDULED_DISCHARGE,
-        icon="mdi:clock-end",
-        entity_category=EntityCategory.CONFIG,
-    ),
-)
 
 
 async def async_setup_entry(
@@ -101,7 +23,7 @@ async def async_setup_entry(
     """Set up writable schedule times."""
     async_add_entities(
         IngeteamTime(entry.runtime_data, desc)
-        for desc in TIMES
+        for desc in entry.runtime_data.profile.times
         if all(
             entry.runtime_data.api.supports("holding", desc.register.address, bit)
             for bit in (0, 8)

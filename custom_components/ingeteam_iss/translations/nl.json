@@ -10,10 +10,12 @@
           "password": "Wachtwoord",
           "port": "HTTP-poort",
           "device_id": "Omvormer-ID",
-          "publish_interval": "Updatefrequentie"
+          "publish_interval": "Updatefrequentie",
+          "profile": "Omvormermodel"
         },
         "data_description": {
-          "publish_interval": "SSE werkt bij zodra gegevens binnenkomen. Andere intervallen beperken alleen publicatie, niet ontvangst of energieberekening."
+          "publish_interval": "SSE werkt bij zodra gegevens binnenkomen. Andere intervallen beperken alleen publicatie, niet ontvangst of energieberekening.",
+          "profile": "Deze versie ondersteunt alleen het TL M-profiel. De oudere 1Play TL zonder M heeft een apart profiel nodig."
         }
       },
       "reconfigure": {
@@ -53,7 +55,8 @@
       "unknown": "Onverwachte fout",
       "invalid_connection_settings": "Ongeldige verbindingsinstellingen. De ID moet een geheel getal van 1 tot 247 zijn en de poort van 1 tot 65535. De gebruikersnaam mag geen ':' bevatten. Gebruikersnaam en wachtwoord moeten Latin-1-tekens gebruiken.",
       "unsupported_device": "Geen ondersteunde registers gevonden voor dit omvormer-ID.",
-      "different_device": "Het serienummer hoort bij een ander apparaat. De geschiedenis wordt niet samengevoegd."
+      "different_device": "Het serienummer hoort bij een ander apparaat. De geschiedenis wordt niet samengevoegd.",
+      "unsupported_profile": "Het gekozen profiel is onbekend of de registerkaart identificeert een niet-ondersteund model. Er zijn geen instellingen geschreven."
     },
     "abort": {
       "already_configured": "Deze omvormer is al geconfigureerd",
@@ -371,6 +374,11 @@
         "10": "Elke 10 seconden",
         "30": "Elke 30 seconden",
         "sse": "Realtime — SSE (ritme van de omvormer)"
+      }
+    },
+    "profile": {
+      "options": {
+        "tl_m": "INGECON SUN STORAGE 1Play TL M — 2 MPPT (getest op 6TL M)"
       }
     }
   }

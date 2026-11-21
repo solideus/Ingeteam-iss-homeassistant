@@ -17,10 +17,10 @@ from aiohttp import (
 from .const import (
     DEFAULT_DEVICE_ID,
     DEFAULT_PORT,
-    HOLDING_RANGES,
-    ONLINE_RANGES,
     SSE_PATH,
 )
+from .profiles import get_profile
+from .profiles.base import ModelProfile, UnsupportedProfileError
 from .sse import SSEEvent, finite_number, iter_sse
 from .values import bounded_integer
 
@@ -49,6 +49,7 @@ class IngeteamApi:
         *,
         port: int = DEFAULT_PORT,
         device_id: int = DEFAULT_DEVICE_ID,
+        profile: ModelProfile | None = None,
     ) -> None:
         self._session = session
         self.host = host.strip().rstrip("/")
@@ -63,6 +64,7 @@ class IngeteamApi:
         self.device_id = bounded_integer(device_id, 1, 247)
         self._timeout = ClientTimeout(total=10)
         self.capabilities: dict[str, Any] = {}
+        self.profile = profile or get_profile()
 
     async def async_load_capabilities(self) -> None:
         """Use the device's own map; a missing optional map is not a lockout."""
@@ -173,19 +175,27 @@ class IngeteamApi:
 
     async def async_read_holding(self) -> dict[tuple[int, int], Any]:
         """Read the selected EMS holding registers."""
+        if not self.profile.holding_ranges:
+            return {}
         response = await self._request_json(
             "POST",
             f"/inverter/holding/read/{self.device_id}",
-            self.ranges("holding", HOLDING_RANGES),
+            self.ranges(
+                "holding", tuple(r.payload() for r in self.profile.holding_ranges)
+            ),
         )
         return self._flatten_register_response(response)
 
     async def async_read_online(self) -> dict[tuple[int, int], Any]:
         """Read selected live inverter values."""
+        if not self.profile.online_ranges:
+            return {}
         response = await self._request_json(
             "POST",
             f"/inverter/online/read/{self.device_id}",
-            self.ranges("online", ONLINE_RANGES),
+            self.ranges(
+                "online", tuple(r.payload() for r in self.profile.online_ranges)
+            ),
         )
         return self._flatten_register_response(response)
 
@@ -203,6 +213,11 @@ class IngeteamApi:
         self, values: list[tuple[int, int, int]]
     ) -> None:
         """Write one or more decoded values in one HTTP transaction."""
+        try:
+            self.profile.validate_map(self.capabilities)
+            self.profile.validate_writes(values)
+        except UnsupportedProfileError as err:
+            raise IngeteamApiError(str(err)) from err
         payload = {
             "Values": [
                 {"address": address, "startbit": startbit, "value": value}

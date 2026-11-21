@@ -9,10 +9,10 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .alarms import raw_integer
 from .const import Register
 from .coordinator import IngeteamCoordinator
 from .entity import IngeteamEntity
+from .profiles.descriptions import OperatingStateDescription
 
 
 async def async_setup_entry(
@@ -24,14 +24,10 @@ async def async_setup_entry(
         [
             IngeteamSSEConnectivity(entry.runtime_data),
             *(
-                IngeteamOperatingState(entry.runtime_data, key)
-                for key in (
-                    "pv_active",
-                    "grid_connected",
-                    "alarm_active",
-                    "power_reduction",
-                )
+                IngeteamOperatingState(entry.runtime_data, description)
+                for description in entry.runtime_data.profile.operating_states
             ),
+            IngeteamAlarmState(entry.runtime_data),
         ]
     )
 
@@ -55,18 +51,18 @@ class IngeteamSSEConnectivity(IngeteamEntity, BinarySensorEntity):
 
 
 class IngeteamOperatingState(IngeteamEntity, BinarySensorEntity):
-    def __init__(self, owner, key):
+    """Publish a binary state declared and interpreted by the active profile."""
+
+    def __init__(self, owner, description: OperatingStateDescription):
         super().__init__(
-            owner.telemetry if key in ("pv_active", "grid_connected") else owner,
+            owner.telemetry if description.source == "telemetry" else owner,
             Register(0),
         )
-        self._key = key
-        self._attr_unique_id = f"{self._serial}_{key}"
-        self._attr_translation_key = key
-        if key == "alarm_active":
-            self._attr_device_class = BinarySensorDeviceClass.PROBLEM
-        if key == "power_reduction":
-            self._attr_entity_registry_enabled_default = False
+        self._description = description
+        self._attr_unique_id = f"{self._serial}_{description.key}"
+        self._attr_translation_key = description.key
+        self._attr_device_class = description.device_class
+        self._attr_entity_registry_enabled_default = description.enabled_default
 
     @property
     def available(self):
@@ -77,24 +73,31 @@ class IngeteamOperatingState(IngeteamEntity, BinarySensorEntity):
 
     @property
     def is_on(self):
-        data = self.coordinator.data or {}
-        if self._key == "pv_active":
-            power = data.get("pv_total_power")
-            return power > 10 if power is not None else None
-        if self._key == "grid_connected":
-            status = data.get("inverter_status")
-            return True if status in (3, 4, 8) else False if status in (2, 11) else None
-        if self._key == "alarm_active":
-            if self.coordinator.alarms:
-                return True
-            return False if self.coordinator.alarm_coverage_complete else None
-        reason = raw_integer(data.get("online", {}).get((41, 0)))
-        return reason != 0 if reason is not None else None
+        return self._description.evaluator(self.coordinator.data or {})
+
+
+class IngeteamAlarmState(IngeteamEntity, BinarySensorEntity):
+    """Alarm coverage is shared infrastructure, independent of register layout."""
+
+    _attr_device_class = BinarySensorDeviceClass.PROBLEM
+    _attr_translation_key = "alarm_active"
+
+    def __init__(self, owner):
+        super().__init__(owner, Register(0))
+        self._attr_unique_id = f"{self._serial}_alarm_active"
+
+    @property
+    def available(self):
+        return self.coordinator.last_update_success and self.is_on is not None
+
+    @property
+    def is_on(self):
+        if self.coordinator.alarms:
+            return True
+        return False if self.coordinator.alarm_coverage_complete else None
 
     @property
     def extra_state_attributes(self):
-        if self._key != "alarm_active":
-            return None
         return {
             "coverage_complete": self.coordinator.alarm_coverage_complete,
             "missing_categories": self.coordinator.missing_alarm_categories,
