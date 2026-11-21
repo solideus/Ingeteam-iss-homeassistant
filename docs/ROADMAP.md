@@ -2,17 +2,17 @@
 
 Esta hoja distingue trabajo acordado y capacidades disponibles. No autoriza por sí sola cambios, publicaciones o fusiones. La referencia publicada al iniciar la reorganización es v0.5.3.
 
-## Prioridad inmediata — Base 0.6.0
+## Completado — Base 0.6.0
 
 1. Extraer el comportamiento del **INGECON SUN STORAGE 1Play 6TL M — 2 MPPT** a un perfil propio, conservando la compatibilidad documentada con ABH1007AE.
 2. Definir un contrato de perfiles y plataformas genéricas. Una extensión normal añade su directorio, registro explícito, pruebas, traducciones y documentación; los cambios comunes se revisan por separado.
 3. Comparar contra v0.5.3 y conservar entidades, ajustes, automatizaciones, energía y estadísticas.
-4. Completar la prueba física del TL M y la validación de la revisión candidata antes de publicar 0.6.0 estable.
+4. Publicar 0.6.0 estable el 21 de noviembre de 2026 tras la CI correcta y la confirmación del mantenedor de funcionamiento sin errores observados en el TL M. El alcance del informe físico se detalla en [VERSION_0.6.0.md](VERSION_0.6.0.md).
 5. Entregar la [guía de aportación de perfiles](PROFILES.md).
 
 El [PR #8](https://github.com/solideus/Ingeteam-iss-homeassistant/pull/8) se ha cerrado sin fusionar y se conserva como referencia. El [issue #7](https://github.com/solideus/Ingeteam-iss-homeassistant/issues/7) continúa el seguimiento del 1Play anterior.
 
-## Después — Perfil 1Play TL sin M
+## Próxima contribución — Perfil 1Play TL sin M
 
 Preparar un PR separado para **INGECON SUN STORAGE 1Play TL — 1 MPPT, sin M**, con evidencia aportada por un colaborador para un 6TL, tarjeta AAX0077, portal AAX1055DC y mapa ABH1002AL. La versión instalada del controlador no queda demostrada únicamente por la compatibilidad declarada en el mapa.
 

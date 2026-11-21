@@ -1,6 +1,6 @@
 # 0.6.0 — Base de perfiles de inversor
 
-Estado: **en desarrollo, sin publicación estable**. La comprobación física de esta reorganización en el inversor de referencia sigue pendiente. Los resultados históricos de 0.5.3 no se presentan como validación física de 0.6.0.
+Estado: **versión estable 0.6.0, publicada el 21 de noviembre de 2026**. El mantenedor comunica funcionamiento normal sin errores observados en su instalación de referencia y autoriza la publicación. Esta observación corresponde a la reorganización 0.6.0; los resultados históricos de 0.5.3 se conservan por separado.
 
 ## Objetivo y alcance
 
@@ -30,11 +30,15 @@ La base de comparación es el contenido publicado de **v0.5.3**, commit `c3b95df
 - Comprobar energía, cierre horario y asignación estadística con Recorder real; día/mes, DST Madrid, reinicio y restauración.
 - Confirmar físicamente el comportamiento ordinario del TL M, sus controles conocidos, horarios y conservación al recargar/reiniciar antes de la publicación estable.
 
-Las pruebas automatizadas no demuestran estabilidad física prolongada ni precisión fiscal. Validación local de esta base: **278 pruebas superadas** tanto en Core **2026.3.0** como en **2026.9.3**, con Python **3.14.9**. Ruff, formato de los módulos y pruebas nuevos, compilación y construcción/comprobación del ZIP correctos. La suite incluye la referencia congelada de v0.5.3 (definiciones, peticiones HTTP, capturas, estados y secuencias energéticas), preservación de personalizaciones/acumulados y perfiles sintéticos de extensión que no se registran en producción. La CI HACS/Hassfest se comprobará en el PR; la validación física sigue pendiente.
+Las pruebas automatizadas no demuestran estabilidad física prolongada ni precisión fiscal. Validación local de esta base: **278 pruebas superadas** tanto en Core **2026.3.0** como en **2026.9.3**, con Python **3.14.9**. Ruff, formato de los módulos y pruebas nuevos, compilación y construcción/comprobación del ZIP correctos. La suite incluye la referencia congelada de v0.5.3 (definiciones, peticiones HTTP, capturas, estados y secuencias energéticas), preservación de personalizaciones/acumulados y perfiles sintéticos de extensión que no se registran en producción. La CI del [PR #9](https://github.com/solideus/Ingeteam-iss-homeassistant/pull/9) supera las pruebas en ambas versiones Core y las validaciones HACS/Hassfest.
+
+### Observación física comunicada para la publicación
+
+El 21 de noviembre de 2026, el mantenedor confirma que la versión 0.6.0 está funcionando sin errores observados y autoriza su publicación estable. La revisión probada es `96720dca24847c6ce0654acb26d824362a258a87`; los cambios de publicación posteriores son solo documentación. No se ha aportado un desglose de duración, maniobras o verificaciones individuales: no se atribuye a este informe una prueba específica de cada control, de Recorder o de todos los escenarios de calendario. No amplía la compatibilidad a modelos distintos del TL M.
 
 ## Actualización y reversión
 
-Cuando exista una versión publicada, actualizar desde HACS conservando la entrada y tras una copia de seguridad completa. Para probar una rama, identificar el commit y tratarla como experimental.
+Actualizar a la versión publicada desde HACS conservando la entrada y tras una copia de seguridad completa. Para probar una rama, identificar el commit y tratarla como experimental.
 
 Si hay que revertir una prueba, restaurar una copia coherente de código y datos cuando corresponda. No borrar entidades ni editar el almacén energético para cambiar de versión. Las guías históricas de sustitución de carpetas de 0.3/0.4 no son un procedimiento universal de reversión desde versiones posteriores.
 

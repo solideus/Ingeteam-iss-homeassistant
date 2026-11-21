@@ -1,6 +1,6 @@
 # Validación y prueba de instalación
 
-Para la base de perfiles en desarrollo, consulta [la validación de 0.6.0](VERSION_0.6.0.md). La referencia publicada continúa siendo [0.5.3](VERSION_0.5.3.md). Los resultados siguientes documentan la validación histórica de 0.4.0.
+Para la versión estable actual, consulta [la validación de 0.6.0](VERSION_0.6.0.md). La base de comparación de la reorganización es [0.5.3](VERSION_0.5.3.md). Los resultados siguientes documentan la validación histórica de 0.4.0.
 
 ## Comprobación automatizada
 

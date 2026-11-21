@@ -1,4 +1,4 @@
-# Ingeteam ISS para Home Assistant — 0.6.0 en desarrollo
+# Ingeteam ISS para Home Assistant — 0.6.0
 
 [English](README.md) · [Instalación y pruebas](docs/VALIDATION.md) · [Telemetría y energía](docs/TELEMETRY_ENERGY.md) · [Publicación](docs/PUBLISHING.md) · [Perfiles](docs/PROFILES.md) · [Hoja de ruta](docs/ROADMAP.md)
 
@@ -7,10 +7,11 @@ Integración local **no oficial** para el **INGECON SUN STORAGE 1Play TL M —
 comprobada. No necesita Node-RED, MQTT ni servicios en la nube. No escribe
 parámetros durante la instalación.
 
-**Esta rama prepara 0.6.0; no es una versión estable publicada.** Extrae el
-comportamiento existente del TL M a un perfil antes de añadir otros inversores.
-La referencia publicada sigue siendo v0.5.3. Falta comprobar físicamente esta
-reorganización: consulta [alcance y validación de 0.6.0](docs/VERSION_0.6.0.md).
+**Versión estable 0.6.0.** Extrae el comportamiento existente del TL M a un
+perfil antes de añadir otros inversores. El 21 de noviembre de 2026 el
+mantenedor confirmó funcionamiento normal sin errores observados en su
+instalación de referencia y autorizó la publicación. Consulta
+[alcance y validación de 0.6.0](docs/VERSION_0.6.0.md).
 
 ## Perfiles de modelo
 

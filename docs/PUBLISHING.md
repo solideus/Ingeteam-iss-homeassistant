@@ -1,8 +1,9 @@
 # GitHub and HACS publication
 
-This branch prepares **0.6.0**, a profile refactor with only the existing TL M
-profile. The published baseline is **v0.5.3**; do not describe this branch as a
-stable release before validation and publication. Its manifest points to
+The stable release is **0.6.0**, a profile refactor with only the existing TL M
+profile. Its equivalence baseline is **v0.5.3**. The maintainer reported normal
+operation without observed errors and authorized publication on 21 November 2026.
+Its manifest points to
 `solideus/Ingeteam-iss-homeassistant` and identifies `@solideus` as code owner.
 See [0.6.0 scope](VERSION_0.6.0.md) and [profile contributions](PROFILES.md).
 
@@ -24,12 +25,12 @@ models must be checked before claiming broad compatibility. Several inverter
 nodes behind one communication board are not yet a supported configuration:
 identity currently follows the board serial number, as in 0.1.0 and 0.2.0.
 
-Before the stable 0.6.0 release, complete the TL M equivalence checks against
-v0.5.3 and the physical checks described in VERSION_0.6.0.md. Test SSE through the
-intended LAN environment, normal reload/restart persistence, known controls and
-schedules, Energy sources and the Installer account permissions. Simulator tests
-and previously reported physical validation do not establish that the refactor
-has passed these checks.
+For future releases, complete the relevant equivalence checks and physical
+checks described in VERSION_0.6.0.md. Test SSE through the intended LAN
+environment, normal reload/restart persistence, known controls and schedules,
+Energy sources and Installer account permissions. Record the scope of physical
+observations explicitly; the 0.6.0 report does not enumerate individual checks.
+Simulator results and historical observations do not demonstrate every scenario.
 Do not upload HAR files, credentials, personal IPs or unredacted device logs.
 The included operating fixtures contain measurements only, without credentials.
 

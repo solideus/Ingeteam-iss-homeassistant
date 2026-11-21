@@ -1,4 +1,4 @@
-# Ingeteam ISS for Home Assistant — 0.6.0 development
+# Ingeteam ISS for Home Assistant — 0.6.0
 
 [Español](README.es.md) · [Testing](docs/VALIDATION.md) · [Telemetry and energy](docs/TELEMETRY_ENERGY.md) · [Publishing](docs/PUBLISHING.md) · [Profiles](docs/PROFILES.md) · [Roadmap](docs/ROADMAP.md)
 
@@ -6,10 +6,10 @@ Unofficial local integration for the **INGECON SUN STORAGE 1Play TL M — 2 MPPT
 with the **6TL M** and portal firmware **ABH1007AE** as the tested reference.
 No cloud, MQTT broker or Node-RED is required. Setup never writes inverter settings.
 
-**This branch prepares 0.6.0; it is not a published stable release.** It extracts
-the existing TL M behavior into a model profile before adding other inverters.
-The last published baseline is v0.5.3. Physical validation of the refactor remains
-pending; see [0.6.0 scope and validation](docs/VERSION_0.6.0.md).
+**Stable release 0.6.0** extracts the existing TL M behavior into a model profile
+before adding other inverters. On 21 November 2026, the maintainer reported
+normal operation without observed errors on the reference installation and
+authorized publication. See [scope and validation](docs/VERSION_0.6.0.md).
 
 ## Model profiles
 

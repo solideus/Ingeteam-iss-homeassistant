@@ -1,6 +1,6 @@
 # Registro de cambios
 
-## Sin publicar — 0.6.0: base de perfiles
+## 0.6.0 — Base de perfiles — 2026-11-21
 
 - Extrae las definiciones de registros, entidades, telemetría y estados del
   INGECON SUN STORAGE 1Play TL M a un perfil propio, `tl_m`, manteniendo el
@@ -13,8 +13,9 @@
 - No incorpora todavía el 1Play TL sin M: su soporte se abordará después en
   un PR separado, conservando la investigación del PR #8.
 - Añade guía de contribución de perfiles, instrucciones permanentes y hoja
-  de ruta. La publicación estable queda pendiente de la validación de esta
-  revisión y de la comprobación física del TL M.
+  de ruta. Incluye 278 pruebas en cada versión Core de la matriz y validación
+  HACS/Hassfest. El mantenedor confirma funcionamiento sin errores observados
+  en su instalación TL M y autoriza la publicación estable el 21 de noviembre.
 
 ## 0.5.3 — Correcciones de balance horario y robustez
 
